@@ -198,7 +198,7 @@ const Team = () => {
             animate={isTitleVisible ? "animate" : "initial"}
             custom={0}
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold text-white mb-6 sm:mb-8 lg:mb-12 tracking-wider sm:tracking-widest leading-tight transform hover:scale-105 transition-transform duration-300 drop-shadow-2xl">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold text-white mb-6 sm:mb-8 lg:mb-10 tracking-wider sm:tracking-widest leading-tight transform hover:scale-105 transition-transform duration-300 drop-shadow-2xl">
               Our Team
             </h1>
 

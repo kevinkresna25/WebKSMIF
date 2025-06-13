@@ -12,7 +12,7 @@ Route::get('/team', function () {
 });
 
 Route::get('/gallery', function () {
-    return Inertia::render('galley');
+    return Inertia::render('gallery');
 });
 
 Route::get('/lsta', function () {
