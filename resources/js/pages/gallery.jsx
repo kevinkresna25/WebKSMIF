@@ -2,7 +2,7 @@ import Layout from "../components/layouts/layout";
 import { motion, AnimatePresence } from "framer-motion";
 import animations from "../utilities/animations";
 import { useInView } from "../hooks/useInView";
-import { useState } from "react";
+import react, { useState } from "react";
 
 // Gallery Item Component
 const GalleryItem = ({ image, title, date, category, index, isVisible }) => (
