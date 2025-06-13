@@ -7,10 +7,11 @@ import { useState } from "react";
 // Gallery Item Component
 const GalleryItem = ({ image, title, date, category, index, isVisible }) => (
   <motion.div
-    initial={animations.fade.fadeInUp.initial}
-    animate={isVisible ? animations.fade.fadeInUp.animate(index) : animations.fade.fadeInUp.initial}
-    transition={{ duration: 0.2, ease: "easeOut", delay: 0.1 }}
-    className="relative group cursor-pointer overflow-hidden rounded-xl transform transition-all duration-100 hover:scale-105 hover:shadow-2xl"
+    variants={animations.fade.fadeInUp}
+    initial="initial"
+    animate={isVisible ? "animate" : "initial"}
+    custom={index}
+    className="relative group cursor-pointer overflow-hidden rounded-xl transform transition-all duration-500 hover:scale-105 hover:shadow-2xl"
   >
     {/* Image */}
     <div className="aspect-video w-full overflow-hidden bg-gray-800">
@@ -233,9 +234,10 @@ const Gallery = () => {
         {/* Hero Section */}
         <div ref={titleRef} className="text-center relative top-16 mb-20">
           <motion.div
-            initial={animations.fade.fadeInUp.initial}
-            animate={isTitleVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp.initial}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            variants={animations.fade.fadeInUp}
+            initial="initial"
+            animate={isTitleVisible ? "animate" : "initial"}
+            custom={0}
           >
             <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold text-white mb-6 sm:mb-8 lg:mb-10 tracking-wider sm:tracking-widest leading-tight transform hover:scale-105 transition-transform duration-300 drop-shadow-2xl">
               Gallery
@@ -243,9 +245,10 @@ const Gallery = () => {
 
             <motion.p
               className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white/80 font-light tracking-wide max-w-4xl mx-auto leading-relaxed"
-              initial={animations.fade.fadeInUp.initial}
-              animate={isTitleVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp.initial}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+              variants={animations.fade.fadeInUp}
+              initial="initial"
+              animate={isTitleVisible ? "animate" : "initial"}
+              custom={0.2}
             >
               Events and activities from KSM IF during the current period.
             </motion.p>
@@ -258,9 +261,11 @@ const Gallery = () => {
 
             {/* Category Filter */}
             <motion.div
-              initial={animations.fade.fadeInUp.initial}
-              animate={animations.fade.fadeInUp.animate}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+              variants={animations.fade.fadeInUp}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true, amount: 0.8 }}
+              custom={0.3}
             >
               <CategoryFilter
                 categories={categories}
@@ -271,9 +276,11 @@ const Gallery = () => {
 
             {/* Gallery Info */}
             <motion.div
-              initial={animations.fade.fadeInUp.initial}
-              animate={animations.fade.fadeInUp.animate}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+              variants={animations.fade.fadeInUp}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true, amount: 0.8 }}
+              custom={0.4}
               className="text-center mb-8"
             >
               <p className="text-white/70 text-lg">
@@ -309,9 +316,10 @@ const Gallery = () => {
             {/* Empty State */}
             {currentItems.length === 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
+                variants={animations.fade.fadeInUp}
+                initial="initial"
+                animate="animate"
+                custom={0}
                 className="text-center py-20"
               >
                 <div className="text-white/50 text-6xl mb-4">📷</div>
@@ -325,9 +333,11 @@ const Gallery = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
+                variants={animations.fade.fadeInUp}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true, amount: 0.8 }}
+                custom={0.8}
               >
                 <Pagination
                   currentPage={currentPage}

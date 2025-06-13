@@ -155,8 +155,8 @@ const ScrollIndicator = () => {
       const windowHeight = window.innerHeight;
       const docHeight = document.documentElement.scrollHeight;
 
-      // Jika sudah di bagian bawah (dengan toleransi 50px)
-      if (scrollTop + windowHeight >= docHeight - 50) {
+      // Jika sudah di bagian bawah (dengan toleransi 100px)
+      if (scrollTop + windowHeight >= docHeight - 100) {
         setIsBottom(true);
       } else {
         setIsBottom(false);
@@ -174,14 +174,22 @@ const ScrollIndicator = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0 }}
-          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-20"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50"
+          style={{ zIndex: 9998 }}
         >
-          <div className="flex flex-col items-center text-white/60 animate-bounce">
-            <span className="text-xs mb-2 tracking-wide">About LSTA</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-col items-center text-white/70 px-3 py-2">
+            <span className="text-xs mb-1 tracking-wide">About LSTA</span>
+            <motion.svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              animate={{ y: [0, 3, 0] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            </motion.svg>
           </div>
         </motion.div>
       )}
@@ -242,10 +250,8 @@ const RequirementsList = ({ title, items, isVisible, index }) => (
   </motion.div>
 );
 
-// Main About LSTA Section
 const AboutLSTASection = () => {
   const [sectionRef, isVisible] = useInView();
-  const [buttonsRef, isButtonsVisible] = useInView();
   const [requirementsRef, isRequirementsVisible] = useInView();
 
   const penyajiRequirements = [
@@ -266,7 +272,6 @@ const AboutLSTASection = () => {
       <section ref={sectionRef} className="relative z-10 px-4 sm:px-6 lg:px-8 pb-20 sm:pb-24 lg:pb-32">
         <div className="max-w-6xl mx-auto">
 
-          {/* Title */}
           <motion.div
             variants={animations.fade.fadeInUp}
             initial="initial"
@@ -285,7 +290,6 @@ const AboutLSTASection = () => {
             </div>
           </motion.div>
 
-          {/* Persyaratan LSTA Section */}
           <motion.div
             variants={animations.fade.fadeInUp}
             initial="initial"
@@ -301,7 +305,6 @@ const AboutLSTASection = () => {
             </p>
           </motion.div>
 
-          {/* Requirements Grid */}
           <div ref={requirementsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
             <RequirementsList
               title="Penyaji"
@@ -317,7 +320,6 @@ const AboutLSTASection = () => {
             />
           </div>
 
-          {/* Additional Info Card */}
           <motion.div
             variants={animations.fade.fadeInUp}
             initial="initial"
@@ -360,10 +362,10 @@ const Lsta = () => {
                 <TitleSection />
                 <CTAButtons />
             </main>
-            <ScrollIndicator/>
-            <SectionDivider/>
 
-            <AboutLSTASection/>
+            <ScrollIndicator />
+            <SectionDivider />
+            <AboutLSTASection />
         </Layout>
     );
 };
