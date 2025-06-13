@@ -168,7 +168,7 @@ const ScrollIndicator = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0 }}
-          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-20"
+          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50"
         >
           <div className="flex flex-col items-center text-white/60 animate-bounce">
             <span className="text-xs mb-2 tracking-wide">Scroll Down</span>

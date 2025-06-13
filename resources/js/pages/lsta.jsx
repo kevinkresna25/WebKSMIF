@@ -2,7 +2,7 @@ import Layout from "../components/layouts/layout";
 import { motion, AnimatePresence } from "framer-motion";
 import animations from "../utilities/animations";
 import { useInView } from "../hooks/useInView";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const MainLogo = () => {
   return (
@@ -143,6 +143,49 @@ const SectionDivider = () => {
         />
       </div>
     </div>
+  );
+};
+
+const ScrollIndicator = () => {
+  const [isBottom, setIsBottom] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+
+      // Jika sudah di bagian bawah (dengan toleransi 50px)
+      if (scrollTop + windowHeight >= docHeight - 50) {
+        setIsBottom(true);
+      } else {
+        setIsBottom(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {!isBottom && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0 }}
+          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-20"
+        >
+          <div className="flex flex-col items-center text-white/60 animate-bounce">
+            <span className="text-xs mb-2 tracking-wide">About LSTA</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -317,7 +360,7 @@ const Lsta = () => {
                 <TitleSection />
                 <CTAButtons />
             </main>
-
+            <ScrollIndicator/>
             <SectionDivider/>
 
             <AboutLSTASection/>

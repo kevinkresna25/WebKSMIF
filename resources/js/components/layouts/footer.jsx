@@ -6,7 +6,7 @@ const Footer = () => {
   const [footerRef, isVisible] = useInView();
 
   return (
-    <footer ref={footerRef} className="relative z-10 overflow-hidden rounded-tl-[50px] rounded-tr-[50px]">
+    <footer ref={footerRef} className="relative z-0 overflow-hidden rounded-tl-[50px] rounded-tr-[50px]">
       {/* Gradient Border */}
       <motion.div
         initial={{ scaleX: 0 }}
