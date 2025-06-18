@@ -61,10 +61,10 @@ const Login = () => {
 
       // Here you would typically make an API call to your Laravel backend
       console.log('Login attempt:', { ...formData, rememberMe });
+        window.location.href = '/dashboard';
 
       // For demo purposes, show success message
       alert('Login successful! (This is a demo)');
-
     } catch (error) {
       console.error('Login error:', error);
       setErrors({ submit: 'Login failed. Please try again.' });
