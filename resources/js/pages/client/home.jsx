@@ -1,9 +1,9 @@
-import Layout from '../components/layouts/layout';
+import Layout from '../../components/layouts/layout';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence} from 'framer-motion';
-import animations from '../utilities/animations';
-import RegistrationModal from '../components/ui/registrationModal';
-import { useInView } from '../hooks/useInView';
+import animations from '../../utilities/animations';
+import RegistrationModal from '../../components/ui/registrationModal';
+import { useInView } from '../../hooks/useInView';
 
 const MainLogo = () => {
   return (

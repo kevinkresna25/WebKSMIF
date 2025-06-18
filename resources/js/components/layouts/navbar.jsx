@@ -27,6 +27,7 @@ const Navbar = () => {
       else if (currentPath.includes('/team')) setCurrentPage('team');
       else if (currentPath.includes('/gallery')) setCurrentPage('gallery');
       else if (currentPath.includes('/lsta')) setCurrentPage('lsta');
+      else if (currentPath.includes('/login')) setCurrentPage('login');
       else setCurrentPage('home');
     }
   }, []);
@@ -64,6 +65,9 @@ const Navbar = () => {
         case 'lsta':
           window.location.href = routes.lsta;
           break;
+        case 'login':
+          window.location.href = routes.login;
+          break;
         default:
           window.location.href = routes.home;
       }
@@ -81,6 +85,9 @@ const Navbar = () => {
           break;
         case 'lsta':
           window.location.href = '/lsta';
+          break;
+        case 'login':
+          window.location.href = '/login';
           break;
         default:
           window.location.href = '/';
@@ -125,31 +132,41 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full p-1 border border-white/20">
-            <NavButton
-              active={currentPage === 'home'}
-              onClick={() => handleNavigation('home')}
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full p-1 border border-white/20">
+              <NavButton
+                active={currentPage === 'home'}
+                onClick={() => handleNavigation('home')}
+              >
+                Dashboard
+              </NavButton>
+              <NavButton
+                active={currentPage === 'team'}
+                onClick={() => handleNavigation('team')}
+              >
+                Our Team
+              </NavButton>
+              <NavButton
+                active={currentPage === 'gallery'}
+                onClick={() => handleNavigation('gallery')}
+              >
+                Gallery
+              </NavButton>
+              <NavButton
+                active={currentPage === 'lsta'}
+                onClick={() => handleNavigation('lsta')}
+              >
+                LSTA & Bursa
+              </NavButton>
+            </div>
+
+            {/* Login Button */}
+            <button
+              onClick={() => handleNavigation('login')}
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-lg hover:shadow-xl"
             >
-              Dashboard
-            </NavButton>
-            <NavButton
-              active={currentPage === 'team'}
-              onClick={() => handleNavigation('team')}
-            >
-              Our Team
-            </NavButton>
-            <NavButton
-              active={currentPage === 'gallery'}
-              onClick={() => handleNavigation('gallery')}
-            >
-              Gallery
-            </NavButton>
-            <NavButton
-              active={currentPage === 'lsta'}
-              onClick={() => handleNavigation('lsta')}
-            >
-              LSTA & Bursa
-            </NavButton>
+              Login
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -247,6 +264,16 @@ const Navbar = () => {
                 >
                   LSTA & Bursa
                 </MobileNavButton>
+
+                {/* Login Button - Mobile */}
+                <div className="pt-4 mt-4 border-t border-white/10">
+                  <button
+                    onClick={() => handleNavigation('login')}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/50 shadow-lg text-sm sm:text-base"
+                  >
+                    🔐 Login
+                  </button>
+                </div>
               </div>
 
               {/* Mobile Menu Footer */}

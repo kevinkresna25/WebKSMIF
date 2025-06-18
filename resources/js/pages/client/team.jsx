@@ -1,9 +1,9 @@
-import Layout from '../components/layouts/layout';
+import Layout from '../../components/layouts/layout';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import animations from '../utilities/animations';
-import { useInView } from '../hooks/useInView';
-import GlassButton from '../components/ui/glassButton';
+import animations from '../../utilities/animations';
+import { useInView } from '../../hooks/useInView';
+import GlassButton from '../../components/ui/glassButton';
 
 // Team Member Component (sama seperti di home)
 const TeamMember = ({ name, position, image, index, isVisible }) => (

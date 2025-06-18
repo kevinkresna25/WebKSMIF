@@ -1,7 +1,7 @@
-import Layout from "../components/layouts/layout";
+import Layout from "../../components/layouts/layout";
 import { motion, AnimatePresence } from "framer-motion";
-import animations from "../utilities/animations";
-import { useInView } from "../hooks/useInView";
+import animations from "../../utilities/animations";
+import { useInView } from "../../hooks/useInView";
 import { useState } from "react";
 
 // FIXED Gallery Item Component - menggunakan pattern yang sama dengan team.jsx
