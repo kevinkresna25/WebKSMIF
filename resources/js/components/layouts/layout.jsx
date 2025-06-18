@@ -13,7 +13,7 @@ const Layout = ({ children, showNavbar = true, showFooter = true }) => {
       {showNavbar && <Navbar />}
 
       {/* Main Content */}
-      <main className={`relative z-10`}>
+      <main className={`relative`}>
         {children}
       </main>
 

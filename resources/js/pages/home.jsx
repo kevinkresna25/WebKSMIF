@@ -2,6 +2,7 @@ import Layout from '../components/layouts/layout';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence} from 'framer-motion';
 import animations from '../utilities/animations';
+import RegistrationModal from '../components/ui/registrationModal';
 import { useInView } from '../hooks/useInView';
 
 const MainLogo = () => {
@@ -493,33 +494,252 @@ const OurTeamSection = () => {
 
 // ============ ONGOING EVENT SECTION ============
 
+// EventCard Component
+const EventCard = ({ event, index, onRegister }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="bg-white/5 backdrop-blur-sm border border-white/20 rounded-2xl p-6 sm:p-8 hover:bg-white/10 transition-all duration-300 transform hover:scale-105"
+    >
+      {/* Event Image */}
+      {event.image && (
+        <div className="aspect-video w-full mb-6 rounded-lg overflow-hidden">
+          <img
+            src={event.image}
+            alt={event.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Event Details */}
+      <div className="text-center">
+        <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+          {event.title}
+        </h3>
+
+        <p className="text-white/80 text-lg leading-relaxed mb-6">
+          {event.description}
+        </p>
+
+        {/* Event Info Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="text-[#2BE0F1] text-sm font-medium mb-1">📅 Tanggal</div>
+            <div className="text-white text-lg font-semibold">
+              {new Date(event.date).toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </div>
+          </div>
+
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="text-[#2BE0F1] text-sm font-medium mb-1">⏰ Waktu</div>
+            <div className="text-white text-lg font-semibold">{event.time}</div>
+          </div>
+
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="text-[#2BE0F1] text-sm font-medium mb-1">📍 Lokasi</div>
+            <div className="text-white text-lg font-semibold">{event.location}</div>
+          </div>
+
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="text-[#2BE0F1] text-sm font-medium mb-1">👥 Kapasitas</div>
+            <div className="text-white text-lg font-semibold">
+              {event.registeredCount || 0}/{event.maxCapacity} peserta
+            </div>
+          </div>
+        </div>
+
+        {/* Registration Status */}
+        <div className="mb-6">
+          {event.status === 'open' && (
+            <div className="inline-flex items-center px-4 py-2 bg-green-500/20 border border-green-500/50 rounded-full">
+              <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+              <span className="text-green-400 font-medium">Pendaftaran Dibuka</span>
+            </div>
+          )}
+          {event.status === 'closing' && (
+            <div className="inline-flex items-center px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></div>
+              <span className="text-yellow-400 font-medium">Pendaftaran Segera Ditutup</span>
+            </div>
+          )}
+          {event.status === 'closed' && (
+            <div className="inline-flex items-center px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-full">
+              <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+              <span className="text-red-400 font-medium">Pendaftaran Ditutup</span>
+            </div>
+          )}
+          {event.status === 'full' && (
+            <div className="inline-flex items-center px-4 py-2 bg-purple-500/20 border border-purple-500/50 rounded-full">
+              <div className="w-2 h-2 bg-purple-400 rounded-full mr-2"></div>
+              <span className="text-purple-400 font-medium">Kuota Penuh</span>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          {/* Registration Button */}
+          {(event.status === 'open' || event.status === 'closing') && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onRegister(event)}
+              className="bg-[#6434F1] hover:bg-[#5228E8] px-8 py-4 text-white font-bold rounded-full transition-all duration-300 transform hover:shadow-lg text-lg flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              Daftar Sekarang
+            </motion.button>
+          )}
+
+          {/* Info Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 px-8 py-4 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 transform hover:shadow-lg text-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Info Lengkap
+          </motion.button>
+        </div>
+
+        {/* Deadline Warning */}
+        {event.registrationDeadline && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg"
+          >
+            <div className="text-orange-400 text-sm font-medium mb-1">⚠️ Deadline Pendaftaran</div>
+            <div className="text-white">
+              {new Date(event.registrationDeadline).toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// Event Component
 const OngoingEventSection = () => {
-  const [eventRef, isVisible] = useInView();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // Mock data
+  const [ongoingEvents] = useState([
+    {
+      id: 1,
+      title: "Workshop React Advanced 2025",
+      description: "Workshop mendalam tentang React hooks, context API, dan performance optimization untuk developer level intermediate hingga advanced.",
+      date: "2025-01-25",
+      time: "09:00 - 16:00 WIB",
+      location: "Lab Komputer TC 2.3",
+      image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop",
+      maxCapacity: 30,
+      registeredCount: 18,
+      status: "open",
+      registrationDeadline: "2025-01-23T23:59:00"
+    },
+    {
+      id: 2,
+      title: "Hackathon 48 Hours Challenge",
+      description: "Kompetisi coding 48 jam untuk menciptakan solusi inovatif dengan tema sustainability dan teknologi hijau.",
+      date: "2025-02-15",
+      time: "08:00 - 17:00 WIB",
+      location: "Auditorium Utama",
+      image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=400&fit=crop",
+      maxCapacity: 50,
+      registeredCount: 35,
+      status: "closing",
+      registrationDeadline: "2025-02-10T23:59:00"
+    }
+  ]);
+
+  const handleRegistration = (event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  const hasOngoingEvents = ongoingEvents && ongoingEvents.length > 0;
 
   return (
-    <section ref={eventRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32 max-h-screen min-h-fit flex items-center justify-center">
-      <div className="max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={animations.fade.fadeInUp}
-          animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 lg:mb-12">
-            Ongoing Event
-          </h2>
-        </motion.div>
+    <div className="min-h-fit ">
+      <section className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
+        <div className="max-w-6xl mx-auto">
+          {/* Section Title */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 lg:mb-12">
+              Ongoing Event
+            </h2>
+          </motion.div>
 
-        <motion.div
-          initial={animations.fade.fadeInUp}
-          animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-        >
-          <p className="text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed">
-            There aren't any ongoing events currently. Thank you.
-          </p>
-        </motion.div>
-      </div>
-    </section>
+          {/* Events Content */}
+          {hasOngoingEvents ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+              {ongoingEvents.map((event, index) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  index={index}
+                  onRegister={handleRegistration}
+                />
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <div className="text-white/30 text-8xl mb-6">📅</div>
+              <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4">
+                Tidak Ada Event Berlangsung
+              </h3>
+              <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+                Saat ini tidak ada event yang sedang berlangsung.
+                Pantau terus media sosial kami untuk informasi event terbaru!
+              </p>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* Registration Modal */}
+      <RegistrationModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        event={selectedEvent}
+      />
+    </div>
   );
 };
 
