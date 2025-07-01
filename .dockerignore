@@ -1,0 +1,14 @@
+**/.devcontainer
+**/.git
+**/.vscode
+/node_modules
+/vendor
+.phpunit.result.cache
+.editorconfig
+.gitattributes
+.gitignore
+docker-compose.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
