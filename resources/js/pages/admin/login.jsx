@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -10,6 +10,36 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+
+  // Check if user is already authenticated on component mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/admin/check-auth', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.authenticated && data.is_admin) {
+          // User is already authenticated and is admin, redirect to dashboard
+          window.location.href = '/admin/dashboard';
+        }
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -24,6 +54,11 @@ const Login = () => {
         ...prev,
         [name]: ''
       }));
+    }
+
+    // Clear global message
+    if (message) {
+      setMessage('');
     }
   };
 
@@ -54,20 +89,55 @@ const Login = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setErrors({});
+    setMessage('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Get CSRF token
+      await fetch('/sanctum/csrf-cookie', {
+        credentials: 'include'
+      });
 
-      // Here you would typically make an API call to your Laravel backend
-      console.log('Login attempt:', { ...formData, rememberMe });
-        window.location.href = '/dashboard';
+      // Login API call
+      const response = await fetch('/admin/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          rememberMe: rememberMe
+        })
+      });
 
-      // For demo purposes, show success message
-      alert('Login successful! (This is a demo)');
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage(data.message);
+        setMessageType('success');
+
+        // Redirect to admin dashboard
+        setTimeout(() => {
+          window.location.href = data.redirect || '/admin/dashboard';
+        }, 1000);
+      } else {
+        if (data.errors) {
+          // Set field-specific errors
+          setErrors(data.errors);
+        } else {
+          // Set general error message
+          setMessage(data.message);
+          setMessageType('error');
+        }
+      }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ submit: 'Login failed. Please try again.' });
+      setMessage('An unexpected error occurred. Please try again.');
+      setMessageType('error');
     } finally {
       setIsLoading(false);
     }
@@ -147,8 +217,9 @@ const Login = () => {
             className="absolute top-6 left-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            disabled={isLoading}
           >
-            <svg className="w-5 h-5 text-white z-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </motion.button>
@@ -171,7 +242,7 @@ const Login = () => {
               transition={{ delay: 0.3 }}
               className="text-3xl font-bold text-white mb-2"
             >
-              Welcome Back
+              Admin Login
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
@@ -179,9 +250,24 @@ const Login = () => {
               transition={{ delay: 0.4 }}
               className="text-white/70"
             >
-              Sign in to access your KSM-IF account
+              Sign in to access KSM-IF Admin Panel
             </motion.p>
           </div>
+
+          {/* Message Display */}
+          {message && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mb-6 p-4 rounded-xl text-sm ${
+                messageType === 'success'
+                  ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                  : 'bg-red-500/20 text-red-300 border border-red-500/30'
+              }`}
+            >
+              {message}
+            </motion.div>
+          )}
 
           {/* Login Form */}
           <motion.form
@@ -208,7 +294,8 @@ const Login = () => {
                       ? 'border-red-400 focus:ring-red-400/50'
                       : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'
                   }`}
-                  placeholder="Enter your email"
+                  placeholder="Enter your admin email"
+                  disabled={isLoading}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +309,7 @@ const Login = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-2 text-sm text-red-400"
                 >
-                  {errors.email}
+                  {Array.isArray(errors.email) ? errors.email[0] : errors.email}
                 </motion.p>
               )}
             </div>
@@ -245,11 +332,13 @@ const Login = () => {
                       : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'
                   }`}
                   placeholder="Enter your password"
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center focus:outline-none"
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5 text-white/40 hover:text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,12 +358,12 @@ const Login = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-2 text-sm text-red-400"
                 >
-                  {errors.password}
+                  {Array.isArray(errors.password) ? errors.password[0] : errors.password}
                 </motion.p>
               )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me */}
             <div className="flex items-center justify-between">
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
@@ -282,15 +371,10 @@ const Login = () => {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-400/50 focus:ring-2"
+                  disabled={isLoading}
                 />
                 <span className="text-sm text-white/70">Remember me</span>
               </label>
-              <button
-                type="button"
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-300"
-              >
-                Forgot password?
-              </button>
             </div>
 
             {/* Submit Button */}
@@ -307,20 +391,9 @@ const Login = () => {
                   <span>Signing in...</span>
                 </div>
               ) : (
-                'Sign In'
+                'Sign In to Admin Panel'
               )}
             </motion.button>
-
-            {/* Error Message */}
-            {errors.submit && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-500/20 border border-red-400/50 rounded-lg"
-              >
-                <p className="text-sm text-red-400">{errors.submit}</p>
-              </motion.div>
-            )}
           </motion.form>
 
           {/* Footer */}
@@ -331,10 +404,7 @@ const Login = () => {
             className="mt-8 text-center relative z-10"
           >
             <p className="text-white/60 text-sm">
-              Don't have an account?{' '}
-              <button className="text-blue-400 hover:text-blue-300 transition-colors duration-300 font-medium">
-                Sign up here
-              </button>
+              © 2024 KSM-IF. All rights reserved.
             </p>
           </motion.div>
         </div>

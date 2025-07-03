@@ -51,10 +51,10 @@ const Footer = () => {
               </div>
 
               {/* Email Section */}
-              <div>
+              {/* <div>
                 <h3 className="text-2xl font-bold text-white mb-4">Email</h3>
                 <p className="text-white/80">ksm.if.ubaya@gmail.com</p>
-              </div>
+              </div> */}
             </motion.div>
 
             {/* Right Column - Social Media */}
@@ -66,13 +66,13 @@ const Footer = () => {
               <h3 className="text-2xl font-bold text-white mb-4">Our Socials</h3>
               <div className="flex gap-4">
                 <SocialIcon
-                  icon={
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-                    </svg>
-                  }
-                  color="bg-red-600 hover:bg-red-700"
-                  href="#"
+                    icon={
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                    }
+                    color="bg-blue-600 hover:bg-blue-700"
+                    href="mailto:info@ksmif.ac.id"
                 />
                 <SocialIcon
                   icon={

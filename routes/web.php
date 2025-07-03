@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -19,19 +20,15 @@ Route::get('/lsta', function () {
     return Inertia::render('client/lsta');
 });
 
-Route::get('/login', function () {
-    return Inertia::render('admin/login');
-});
-
 Route::get('/dashboard', function () {
     return Inertia::render('admin/dashboard');
 });
 
 // Admin Login Routes (tanpa middleware auth)
-// Route::prefix('admin')->name('admin.')->group(function () {
-//     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-//     Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
-// });
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+});
 
 /*
 |--------------------------------------------------------------------------

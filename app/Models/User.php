@@ -45,4 +45,36 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Relationships
+    public function strukturKsm()
+    {
+        return $this->hasMany(Struktur_ksm::class);
+    }
+
+    public function strukturAktif()
+    {
+        return $this->hasOne(Struktur_ksm::class)->where('is_active', true);
+    }
+
+    public function galeris()
+    {
+        return $this->hasMany(Galeri::class, 'uploaded_by');
+    }
+
+    // Accessors
+    public function getJabatanAttribute()
+    {
+        return $this->strukturAktif?->jabatan?->nama;
+    }
+
+    public function getDivisiAttribute()
+    {
+        return $this->strukturAktif?->divisi?->nama;
+    }
+
+    public function getFotoProfilAttribute()
+    {
+        return $this->strukturAktif?->foto_profil;
+    }
 }

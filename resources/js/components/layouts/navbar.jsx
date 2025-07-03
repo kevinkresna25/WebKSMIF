@@ -87,7 +87,7 @@ const Navbar = () => {
           window.location.href = '/lsta';
           break;
         case 'login':
-          window.location.href = '/login';
+          window.location.href = '/admin/login';
           break;
         default:
           window.location.href = '/';
