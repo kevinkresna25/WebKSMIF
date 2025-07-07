@@ -12,7 +12,7 @@ class Struktur_ksm extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+        'nama',
         'jabatan_id',
         'divisi_kode',
         'periode',

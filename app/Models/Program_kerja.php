@@ -22,7 +22,8 @@ class Program_kerja extends Model
         'tanggal_mulai_acara',
         'tanggal_selesai_acara',
         'target_peserta',
-        'contact_person'
+        'contact_person',
+        'uploaded_by'
     ];
 
     protected $casts = [
@@ -30,10 +31,17 @@ class Program_kerja extends Model
         'tanggal_mulai_acara' => 'datetime',
         'tanggal_selesai_acara' => 'datetime',
         'masa_pendaftaran' => 'boolean',
-        'selesai' => 'boolean'
+        'selesai' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Relationships
+    public function uploader()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
     public function galeris()
     {
         return $this->hasMany(Galeri::class);

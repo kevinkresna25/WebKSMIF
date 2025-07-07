@@ -4,6 +4,7 @@ import { motion, AnimatePresence} from 'framer-motion';
 import animations from '../../utilities/animations';
 import RegistrationModal from '../../components/ui/registrationModal';
 import { useInView } from '../../hooks/useInView';
+import { Head } from '@inertiajs/react';
 
 const MainLogo = () => {
   return (
@@ -185,147 +186,136 @@ const ScrollIndicator = () => {
 
 // ============ ABOUT SECTION ============
 
-const AboutSection = () => {
-  return (
-    <section className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="flex flex-col lg:flex-row items-center justify-between max-w-6xl mx-auto gap-8 lg:gap-16">
+const AboutSectionWithData = ({ info }) => {
+    return (
+        <section className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row items-center justify-between max-w-6xl mx-auto gap-8 lg:gap-16">
 
-        {/* Text Area */}
-        <motion.div
-          variants={animations.fade.fadeInLeft}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, amount: 0.8 }}
-          custom={0.2}
-          className="text-left text-white lg:flex-1"
-        >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-            About Us
-          </h2>
-          <p className="text-lg sm:text-xl lg:text-2xl leading-relaxed opacity-80 mb-6">
-            An Informatics Engineering student organization, established on the University of Surabaya Campus since 1999. We are located at the TC 2.3 Building, University of Surabaya.
-          </p>
-          <button className="bg-[#2BE0F1]/20 hover:bg-[#2BE0F1]/30 border border-[#2BE0F1]/50 hover:border-[#2BE0F1]/70 px-6 py-3 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
-            Check out what we do
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </motion.div>
+                {/* Text Area - menggunakan data dari database */}
+                <motion.div
+                    variants={animations.fade.fadeInLeft}
+                    initial="initial"
+                    whileInView="animate"
+                    viewport={{ once: true, amount: 0.8 }}
+                    custom={0.2}
+                    className="text-left text-white lg:flex-1"
+                >
+                    <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                        About Us
+                    </h2>
+                    <p className="text-lg sm:text-xl lg:text-2xl leading-relaxed opacity-80 mb-6">
+                        {info?.tentang || "An Informatics Engineering student organization, established on the University of Surabaya Campus since 1999."}
+                    </p>
+                    <button className="bg-[#2BE0F1]/20 hover:bg-[#2BE0F1]/30 border border-[#2BE0F1]/50 hover:border-[#2BE0F1]/70 px-6 py-3 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+                        Check out what we do
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </motion.div>
 
-        {/* Image Area */}
-        <motion.div
-          variants={animations.fade.fadeInRight}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, amount: 0.8 }}
-          custom={0.2}
-          className="w-48 sm:w-56 md:w-64 lg:w-72"
-        >
-          <img
-            src="/images/asset1.png"
-            alt="About Us Illustration"
-            className="w-full h-full object-contain"
-          />
-        </motion.div>
-      </div>
-    </section>
-  );
+                {/* Image Area */}
+                <motion.div
+                    variants={animations.fade.fadeInRight}
+                    initial="initial"
+                    whileInView="animate"
+                    viewport={{ once: true, amount: 0.8 }}
+                    custom={0.2}
+                    className="w-48 sm:w-56 md:w-64 lg:w-72"
+                >
+                    <img
+                        src="/images/asset1.png"
+                        alt="About Us Illustration"
+                        className="w-full h-full object-contain"
+                    />
+                </motion.div>
+            </div>
+        </section>
+    );
 };
 
 // ============ VISION & MISSION SECTION ============
 
-const VisionMissionSection = () => {
-  const [visionRef, isVisionVisible] = useInView({ triggerOnce: true, threshold: 0.3 });
-  const [missionRef, isMissionVisible] = useInView({ triggerOnce: true, threshold: 0.3 });
+const VisionMissionSectionWithData = ({ info }) => {
+    const [visionRef, isVisionVisible] = useInView({ triggerOnce: true, threshold: 0.3 });
+    const [missionRef, isMissionVisible] = useInView({ triggerOnce: true, threshold: 0.3 });
 
-  const missions = [
-    {
-      number: "1",
-      title: "Organizing activities that can develop students' potential in the field of Computer Science",
-      color: "bg-[#2BE0F1]"
-    },
-    {
-      number: "2",
-      title: "Empowering all available resources to improve the quality of engineering faculty students, especially KSM IF",
-      color: "bg-[#E7D43B]"
-    },
-    {
-      number: "3",
-      title: "Being proactive in identifying the needs and desires of engineering faculty students in the field of Computer Science",
-      color: "bg-[#8B5CF6]"
-    },
-    {
-      number: "4",
-      title: "Expanding the knowledge of Computer Science students as a means to accommodate the needs of students in this field",
-      color: "bg-[#F59E0B]"
-    }
-  ];
+    // Parse misi dari database (yang disimpan sebagai JSON)
+    const missions = info?.misi ? (
+        Array.isArray(info.misi) ? info.misi : JSON.parse(info.misi)
+    ) : [
+        "Organizing activities that can develop students' potential in the field of Computer Science",
+        "Empowering all available resources to improve the quality of engineering faculty students, especially KSM IF",
+        "Being proactive in identifying the needs and desires of engineering faculty students in the field of Computer Science",
+        "Expanding the knowledge of Computer Science students as a means to accommodate the needs of students in this field"
+    ];
 
-  return (
-    <section className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
-      <div className="max-w-6xl mx-auto">
+    const missionColors = ["bg-[#2BE0F1]", "bg-[#E7D43B]", "bg-[#8B5CF6]", "bg-[#F59E0B]"];
 
-        {/* Vision */}
-        <div ref={visionRef} className="text-center mb-24 sm:mb-32 lg:mb-40">
-          <motion.div
-            variants={animations.fade.fadeInUp}
-            initial="initial"
-            animate={isVisionVisible ? "animate" : "initial"}
-            custom={0}
-          >
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-12 lg:mb-16">
-              Our Vision
-            </h2>
-          </motion.div>
+    return (
+        <section className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
+            <div className="max-w-6xl mx-auto">
 
-          <motion.div
-            variants={animations.fade.fadeInScale}
-            initial="initial"
-            animate={isVisionVisible ? "animate" : "initial"}
-            custom={1}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 sm:p-12 lg:p-16 hover:bg-white/10 transition-all duration-1000 max-w-4xl mx-auto"
-          >
-            <p className="text-lg sm:text-xl lg:text-2xl text-white/90 leading-relaxed">
-              To be an organization capable of accommodating, expanding knowledge, and realizing the aspirations of engineering faculty students related to Computer Science.
-            </p>
-          </motion.div>
-        </div>
+                {/* Vision - menggunakan data dari database */}
+                <div ref={visionRef} className="text-center mb-24 sm:mb-32 lg:mb-40">
+                    <motion.div
+                        variants={animations.fade.fadeInUp}
+                        initial="initial"
+                        animate={isVisionVisible ? "animate" : "initial"}
+                        custom={0}
+                    >
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-12 lg:mb-16">
+                            Our Vision
+                        </h2>
+                    </motion.div>
 
-        {/* Mission */}
-        <div ref={missionRef} className="text-center">
-          <motion.div
-            variants={animations.fade.fadeInUp}
-            initial="initial"
-            animate={isMissionVisible ? "animate" : "initial"}
-            custom={0}
-          >
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-12 lg:mb-16">
-              Our Mission
-            </h2>
-          </motion.div>
+                    <motion.div
+                        variants={animations.fade.fadeInScale}
+                        initial="initial"
+                        animate={isVisionVisible ? "animate" : "initial"}
+                        custom={1}
+                        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 sm:p-12 lg:p-16 hover:bg-white/10 transition-all duration-1000 max-w-4xl mx-auto"
+                    >
+                        <p className="text-lg sm:text-xl lg:text-2xl text-white/90 leading-relaxed">
+                            {info?.visi}
+                        </p>
+                    </motion.div>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
-            {missions.map((mission, index) => (
-              <motion.div
-                key={mission.number}
-                variants={animations.fade.fadeInUp}
-                initial="initial"
-                animate={isMissionVisible ? "animate" : "initial"}
-                custom={index + 1}
-              >
-                <MissionCard
-                  number={mission.number}
-                  title={mission.title}
-                  numberBg={mission.color}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+                {/* Mission - menggunakan data dari database */}
+                <div ref={missionRef} className="text-center">
+                    <motion.div
+                        variants={animations.fade.fadeInUp}
+                        initial="initial"
+                        animate={isMissionVisible ? "animate" : "initial"}
+                        custom={0}
+                    >
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-12 lg:mb-16">
+                            Our Mission
+                        </h2>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+                        {missions.map((mission, index) => (
+                            <motion.div
+                                key={index}
+                                variants={animations.fade.fadeInUp}
+                                initial="initial"
+                                animate={isMissionVisible ? "animate" : "initial"}
+                                custom={index + 1}
+                            >
+                                <MissionCard
+                                    number={(index + 1).toString()}
+                                    title={mission}
+                                    numberBg={missionColors[index] || "bg-blue-500"}
+                                />
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
 };
 
 const MissionCard = ({ number, title, numberBg }) => (
@@ -418,78 +408,90 @@ const TeamMember = ({ name, position, image, index, isVisible }) => (
   </motion.div>
 );
 
-const OurTeamSection = () => {
-  const [teamRef, isVisible] = useInView();
+const OurTeamSectionWithData = ({ teamHighlight, currentPeriode }) => {
+    const [teamRef, isVisible] = useInView();
 
-  const teamMembers = [
-    { name: "Satya Aryaputra Wigiyanto", position: "Head of KSM IF", image: "/images/fransiscus.png" },
-    { name: "Fanny Rorencia Ribowo", position: "Vice Head of KSM IF", image: "/images/fransiscus.png" },
-    { name: "Safira Ramaditha", position: "Secretary of KSM IF", image: "/images/fransiscus.png" },
-    { name: "Fransiscus Xaverius Petrus Jonathan Suhargo", position: "Treasurer of KSM IF", image: "/images/fransiscus.png" }
-  ];
+    return (
+        <section ref={teamRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
+            <div className="max-w-4xl mx-auto text-center">
+                <motion.div
+                    initial={animations.fade.fadeInUp}
+                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                    <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 lg:mb-12">
+                        Our Team
+                    </h2>
+                </motion.div>
 
-  return (
-    <section ref={teamRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
-      <div className="max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={animations.fade.fadeInUp}
-          animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 lg:mb-12">
-            Our Team
-          </h2>
-        </motion.div>
+                <motion.div
+                    initial={animations.fade.fadeInUp}
+                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                >
+                    <p className="text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed mb-12 lg:mb-16">
+                        Periode {currentPeriode} - We are comprised of four departments, internal relation, public relation, human resource development, and creative design department.
+                    </p>
+                </motion.div>
 
-        <motion.div
-          initial={animations.fade.fadeInUp}
-          animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-        >
-          <p className="text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed mb-12 lg:mb-16">
-            We are comprised of four department, internal relation, public relation, human resource development, and creative design department.
-          </p>
-        </motion.div>
+                <motion.div
+                    initial={animations.fade.fadeInUp}
+                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                    className="flex justify-center mb-16"
+                >
+                    <button className="bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 px-8 py-4 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 transform hover:scale-105 text-lg">
+                        Executive Board
+                    </button>
+                </motion.div>
 
-        <motion.div
-          initial={animations.fade.fadeInUp}
-          animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-          className="flex justify-center mb-16"
-        >
-          <button className="bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 px-8 py-4 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 transform hover:scale-105 text-lg">
-            Executive Board
-          </button>
-        </motion.div>
+                {/* Team Members Grid - menggunakan data dari database */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-32 gap-y-24 mb-20 max-w-6xl mx-auto">
+                    {teamHighlight && teamHighlight.length > 0 ? (
+                        teamHighlight.map((member, index) => (
+                            <TeamMember
+                                key={index}
+                                name={member.name}
+                                position={member.position}
+                                image={member.image}
+                                index={index}
+                                isVisible={isVisible}
+                            />
+                        ))
+                    ) : (
+                        <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center"
+                        >
+                        <div className="text-white/30 text-8xl mb-6">🥷</div>
+                        <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4">
+                            Tidak Ada Team
+                        </h3>
+                        <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+                            Saat ini tidak ada team.
+                            Pantau terus media sosial kami untuk informasi event terbaru!
+                        </p>
+                        </motion.div>
+                    )}
+                </div>
 
-        {/* Team Members Grid - 2x2 layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-32 gap-y-24 mb-20 max-w-6xl mx-auto">
-          {teamMembers.map((member, index) => (
-            <TeamMember
-              key={index}
-              name={member.name}
-              position={member.position}
-              image={member.image}
-              index={index}
-              isVisible={isVisible}
-            />
-          ))}
-        </div>
-
-        {/* See full team button */}
-        <motion.div
-          initial={animations.fade.fadeInUp}
-          animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
-          className="flex justify-center"
-        >
-          <button className="bg-[#6434F1] hover:bg-[#5228E8] px-8 py-4 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105 text-lg shadow-lg hover:shadow-xl">
-            See our full team
-          </button>
-        </motion.div>
-      </div>
-    </section>
-  );
+                {/* See full team button */}
+                <motion.div
+                    initial={animations.fade.fadeInUp}
+                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
+                    className="flex justify-center"
+                >
+                    <a href="/team">
+                        <button className="bg-[#6434F1] hover:bg-[#5228E8] px-8 py-4 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105 text-lg shadow-lg hover:shadow-xl">
+                            See our full team
+                        </button>
+                    </a>
+                </motion.div>
+            </div>
+        </section>
+    );
 };
 
 // ============ ONGOING EVENT SECTION ============
@@ -641,39 +643,32 @@ const EventCard = ({ event, index, onRegister }) => {
 };
 
 // Event Component
-const OngoingEventSection = () => {
+const OngoingEventSection = ({ featuredPrograms, onRegister }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   // Mock data
-  const [ongoingEvents] = useState([
-    {
-      id: 1,
-      title: "Workshop React Advanced 2025",
-      description: "Workshop mendalam tentang React hooks, context API, dan performance optimization untuk developer level intermediate hingga advanced.",
-      date: "2025-01-25",
-      time: "09:00 - 16:00 WIB",
-      location: "Lab Komputer TC 2.3",
-      image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop",
-      maxCapacity: 30,
-      registeredCount: 18,
-      status: "open",
-      registrationDeadline: "2025-01-23T23:59:00"
-    },
-    {
-      id: 2,
-      title: "Hackathon 48 Hours Challenge",
-      description: "Kompetisi coding 48 jam untuk menciptakan solusi inovatif dengan tema sustainability dan teknologi hijau.",
-      date: "2025-02-15",
-      time: "08:00 - 17:00 WIB",
-      location: "Auditorium Utama",
-      image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=400&fit=crop",
-      maxCapacity: 50,
-      registeredCount: 35,
-      status: "closing",
-      registrationDeadline: "2025-02-10T23:59:00"
-    }
-  ]);
+  const ongoingEvents = featuredPrograms.map(program => ({
+        id: program.id,
+        title: program.nama,
+        description: program.deskripsi,
+        date: program.tanggal_mulai_acara,
+        time: new Date(program.tanggal_mulai_acara).toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit'
+        }) + ' - ' + new Date(program.tanggal_selesai_acara).toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit'
+        }),
+        location: program.lokasi,
+        image: program.poster,
+        maxCapacity: 100, // Default karena tidak ada di database
+        registeredCount: 0, // Default karena tidak ada di database
+        status: program.masa_pendaftaran ? 'open' : 'closed',
+        registrationDeadline: program.tanggal_selesai_pendaftaran,
+        contact_person: program.contact_person,
+        target_peserta: program.target_peserta
+    }));
 
   const handleRegistration = (event) => {
     setSelectedEvent(event);
@@ -775,94 +770,153 @@ const GalleryItem = ({ image, title, index, isVisible }) => (
   </motion.div>
 );
 
-const GallerySection = () => {
-  const [galleryRef, isVisible] = useInView();
+const GallerySectionWithData = ({ galleryPreview }) => {
+    const [galleryRef, isVisible] = useInView();
 
-  const galleryItems = [
-    { image: "/images/event1.png", title: "Workshop Web Development" },
-    { image: "/images/event1.png", title: "Seminar AI & Machine Learning" },
-    { image: "/images/event1.png", title: "Hackathon Competition 2024" },
-    { image: "/images/event1.png", title: "Study Tour to Tech Company" },
-    { image: "/images/event1.png", title: "Programming Bootcamp" },
-    { image: "/images/event1.png", title: "Alumni Networking Event" }
-  ];
+    return (
+        <section ref={galleryRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
+            <div className="max-w-6xl mx-auto">
+                <div className="text-center mb-16">
+                    <motion.div
+                        initial={animations.fade.fadeInUp}
+                        animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8">
+                            Gallery
+                        </h2>
+                    </motion.div>
 
-  return (
-    <section ref={galleryRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <motion.div
-            initial={animations.fade.fadeInUp}
-            animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8">
-              Gallery
-            </h2>
-          </motion.div>
+                    <motion.div
+                        initial={animations.fade.fadeInUp}
+                        animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                    >
+                        <p className="text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed">
+                            Events and activities from KSM IF during the current period.
+                        </p>
+                    </motion.div>
+                </div>
 
-          <motion.div
-            initial={animations.fade.fadeInUp}
-            animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          >
-            <p className="text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed">
-              Events and activities from KSM IF during the current period.
-            </p>
-          </motion.div>
-        </div>
+                {/* Gallery Grid - menggunakan data dari database */}
+                {galleryPreview && galleryPreview.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+                        {galleryPreview.map((item, index) => (
+                            <GalleryItem
+                                key={item.id}
+                                image={item.image_url}
+                                title={item.program_name}
+                                index={index}
+                                isVisible={isVisible}
+                            />
+                        ))}
+                    </div>
+                ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <div className="text-white/30 text-8xl mb-6">📸</div>
+              <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4">
+                Tidak Ada Gallery
+              </h3>
+              <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+                Saat ini tidak ada gallery.
+                Pantau terus media sosial kami untuk informasi event terbaru!
+              </p>
+            </motion.div>
+          )}
 
-        {/* Gallery Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
-          {galleryItems.map((item, index) => (
-            <GalleryItem
-              key={index}
-              image={item.image}
-              title={item.title}
-              index={index}
-              isVisible={isVisible}
-            />
-          ))}
-        </div>
-
-        {/* View More Button */}
-        <motion.div
-          initial={animations.fade.fadeInUp}
-          animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
-          className="text-center"
-        >
-          <button className="bg-[#6434F1] hover:bg-[#5228E8] px-8 py-4 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105 text-lg shadow-lg hover:shadow-xl">
-            View More
-          </button>
-        </motion.div>
-      </div>
-    </section>
-  );
+                {/* View More Button */}
+                <motion.div
+                    initial={animations.fade.fadeInUp}
+                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
+                    className="text-center"
+                >
+                    <a href="/gallery">
+                        <button className="bg-[#6434F1] hover:bg-[#5228E8] px-8 py-4 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105 text-lg shadow-lg hover:shadow-xl">
+                            View More
+                        </button>
+                    </a>
+                </motion.div>
+            </div>
+        </section>
+    );
 };
 
-const Home= () => {
+const Home = ({
+    info = null,
+    featuredPrograms = [],
+    teamHighlight = [],
+    galleryPreview = [],
+    stats = {},
+    currentPeriode = '',
+    error = null
+}) => {
+    // State untuk modal
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+
+    // Jika ada error, tampilkan error page
+    if (error) {
+        return (
+            <Layout>
+                <Head title="Home - KSM IF" />
+                <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-center text-white">
+                        <h1 className="text-2xl font-bold mb-4">Oops!</h1>
+                        <p>{error}</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
     return (
         <Layout>
-            {/* Hero Section */}
+            <Head title="Home - KSM IF" />
+            {/* Hero Section - tetap sama */}
             <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
                 <MainLogo />
                 <TitleSection />
                 <CTAButtons />
             </main>
 
-            {/* Scroll Indicator */}
             <ScrollIndicator />
 
-            {/* Content Sections */}
-            <AboutSection />
-            <VisionMissionSection />
+            {/* About Section - menggunakan data dari database */}
+            <AboutSectionWithData info={info} />
+
+            {/* Vision Mission - menggunakan data dari database */}
+            <VisionMissionSectionWithData info={info} />
+
             <SectionDivider />
-            <OurTeamSection />
-            <OngoingEventSection />
-            <GallerySection />
+
+            {/* Our Team - menggunakan data dari database */}
+            <OurTeamSectionWithData teamHighlight={teamHighlight} currentPeriode={currentPeriode} />
+
+            {/* Ongoing Event - menggunakan data program dari database */}
+            <OngoingEventSection
+                featuredPrograms={featuredPrograms}
+                onRegister={(program) => {
+                    setSelectedEvent(program);
+                    setIsModalOpen(true);
+                }}
+            />
+
+            {/* Gallery - menggunakan data dari database */}
+            <GallerySectionWithData galleryPreview={galleryPreview} />
+
+            {/* Registration Modal */}
+            <RegistrationModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                event={selectedEvent}
+            />
         </Layout>
-    )
-}
+    );
+};
 
 export default Home;

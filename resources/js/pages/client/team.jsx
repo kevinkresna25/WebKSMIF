@@ -1,11 +1,11 @@
+import React, { useState, useEffect } from 'react';
+import { Head } from '@inertiajs/react';
 import Layout from '../../components/layouts/layout';
-import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import animations from '../../utilities/animations';
 import { useInView } from '../../hooks/useInView';
-import GlassButton from '../../components/ui/glassButton';
 
-// Team Member Component (sama seperti di home)
+// Team Member Component - tetap sama
 const TeamMember = ({ name, position, image, index, isVisible }) => (
   <motion.div
     initial={animations.fade.fadeInUp}
@@ -24,6 +24,9 @@ const TeamMember = ({ name, position, image, index, isVisible }) => (
           src={image}
           alt={name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = '/images/default-avatar.png'; // Fallback image
+          }}
         />
       </div>
     </div>
@@ -48,8 +51,8 @@ const TeamMember = ({ name, position, image, index, isVisible }) => (
   </motion.div>
 );
 
-// Division Button Component
-const DivisionButton = ({ title, active = false, onClick, index }) => {
+// Division Button Component - dengan member count dari database
+const DivisionButton = ({ title, active = false, onClick, index, memberCount = 0 }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -77,52 +80,37 @@ const DivisionButton = ({ title, active = false, onClick, index }) => {
 
         <span className="relative z-10 tracking-wide">
           {title}
+          {memberCount > 0 && (
+            <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
+              {memberCount}
+            </span>
+          )}
         </span>
       </button>
     </motion.div>
   );
 };
 
-// Team Members by Division Component
-const TeamMembersByDivision = ({ activeDivision }) => {
+// Team Members by Division Component - menggunakan data dari database
+const TeamMembersByDivision = ({ activeDivision, teamData, divisions, isLoading, onLoadDivision }) => {
   const [membersRef, isMembersVisible] = useInView();
+  const [currentMembers, setCurrentMembers] = useState([]);
 
-  // Data team members untuk setiap division
-  const teamData = {
-    BPH: [
-      { name: "Satya Aryaputra Wigiyanto", position: "Head of KSM IF", image: "/images/fransiscus.png" },
-      { name: "Fanny Rorencia Ribowo", position: "Vice Head of KSM IF", image: "/images/fransiscus.png" },
-      { name: "Safira Ramaditha", position: "Secretary of KSM IF", image: "/images/fransiscus.png" },
-      { name: "Safira Ramaditha", position: "Secretary of KSM IF", image: "/images/fransiscus.png" },
-      { name: "Fransiscus Xaverius Petrus Jonathan Suhargo", position: "Treasurer of KSM IF", image: "/images/fransiscus.png" }
-    ],
-    IRD: [
-      { name: "John Doe", position: "IRD Head", image: "/images/fransiscus.png" },
-      { name: "Jane Smith", position: "IRD Vice Head", image: "/images/fransiscus.png" },
-      { name: "Bob Wilson", position: "IRD Member", image: "/images/fransiscus.png" },
-      { name: "Alice Brown", position: "IRD Member", image: "/images/fransiscus.png" }
-    ],
-    PRD: [
-      { name: "Mike Johnson", position: "PRD Head", image: "/images/fransiscus.png" },
-      { name: "Sarah Davis", position: "PRD Vice Head", image: "/images/fransiscus.png" },
-      { name: "Tom Miller", position: "PRD Member", image: "/images/fransiscus.png" },
-      { name: "Lisa Garcia", position: "PRD Member", image: "/images/fransiscus.png" }
-    ],
-    HRDD: [
-      { name: "David Lee", position: "HRDD Head", image: "/images/fransiscus.png" },
-      { name: "Emma Wilson", position: "HRDD Vice Head", image: "/images/fransiscus.png" },
-      { name: "Ryan Taylor", position: "HRDD Member", image: "/images/fransiscus.png" },
-      { name: "Sophie Anderson", position: "HRDD Member", image: "/images/fransiscus.png" }
-    ],
-    CDD: [
-      { name: "Alex Chen", position: "CDD Head", image: "/images/fransiscus.png" },
-      { name: "Maya Patel", position: "CDD Vice Head", image: "/images/fransiscus.png" },
-      { name: "Jake Thompson", position: "CDD Member", image: "/images/fransiscus.png" },
-      { name: "Zoe Martinez", position: "CDD Member", image: "/images/fransiscus.png" }
-    ]
-  };
+  // Update members ketika division berubah
+  useEffect(() => {
+    if (teamData[activeDivision]) {
+      setCurrentMembers(teamData[activeDivision]);
+    } else {
+      setCurrentMembers([]);
+      // Load data untuk division ini jika belum ada
+      if (onLoadDivision) {
+        onLoadDivision(activeDivision);
+      }
+    }
+  }, [activeDivision, teamData]);
 
-  const currentMembers = teamData[activeDivision] || teamData.BPH;
+  // Cari info divisi yang aktif
+  const activeDivisionInfo = divisions.find(div => div.id === activeDivision);
 
   return (
     <section ref={membersRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20">
@@ -137,57 +125,124 @@ const TeamMembersByDivision = ({ activeDivision }) => {
           className="text-center mb-16"
         >
           <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            {activeDivision === 'BPH' && 'Badan Pengurus Harian'}
-            {activeDivision === 'IRD' && 'Internal Relation Department'}
-            {activeDivision === 'PRD' && 'Public Relation Department'}
-            {activeDivision === 'HRDD' && 'Human Resource Development Department'}
-            {activeDivision === 'CDD' && 'Creative Design Department'}
+            {activeDivisionInfo?.name || activeDivision}
           </h3>
+          {activeDivisionInfo?.description && (
+            <p className="text-lg text-white/70 mb-6 max-w-3xl mx-auto">
+              {activeDivisionInfo.description}
+            </p>
+          )}
           <div className="h-1 w-24 bg-gradient-to-r from-[#6434F1] to-[#2BE0F1] mx-auto rounded-full"></div>
         </motion.div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white/70">Loading team members...</p>
+          </div>
+        )}
+
         {/* Team Members Grid */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeDivision}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-16 lg:gap-x-16 lg:gap-y-24"
-          >
-            {currentMembers.map((member, index) => (
-              <TeamMember
-                key={`${activeDivision}-${index}`}
-                name={member.name}
-                position={member.position}
-                image={member.image}
-                index={index}
-                isVisible={isMembersVisible}
-              />
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {!isLoading && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeDivision}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-16 lg:gap-x-16 lg:gap-y-24"
+            >
+              {currentMembers.length > 0 ? (
+                currentMembers.map((member, index) => (
+                  <TeamMember
+                    key={`${activeDivision}-${member.id}`}
+                    name={member.name}
+                    position={member.position}
+                    image={member.image}
+                    index={index}
+                    isVisible={isMembersVisible}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-20">
+                  <div className="text-white/50 text-lg">
+                    Belum ada anggota di divisi ini
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
     </section>
   );
 };
 
-// Main Team Component
-const Team = () => {
+// Main Team Component - dengan props dari database
+const Team = ({
+  teamData = {},
+  divisions = [],
+  teamStats = {},
+  currentPeriode = '',
+  error = null
+}) => {
   const [titleRef, isTitleVisible] = useInView();
-  const [activeDivision, setActiveDivision] = useState('BPH');
+  const [activeDivision, setActiveDivision] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const divisions = [
-    { id: 'BPH', title: 'BPH' },
-    { id: 'IRD', title: 'IRD' },
-    { id: 'PRD', title: 'PRD' },
-    { id: 'HRDD', title: 'HRDD' },
-    { id: 'CDD', title: 'CDD' },
-  ];
+  // Set default division ketika component mount
+  useEffect(() => {
+    if (divisions.length > 0) {
+      // Cari divisi pertama yang memiliki anggota, atau default ke BPH
+      const firstDivisionWithMembers = divisions.find(div => teamData[div.id]?.length > 0);
+      if (firstDivisionWithMembers) {
+        setActiveDivision(firstDivisionWithMembers.id);
+      } else if (divisions[0]) {
+        setActiveDivision(divisions[0].id);
+      }
+    }
+  }, [divisions, teamData]);
+
+  // Function untuk load data division via AJAX (optional)
+  const handleLoadDivision = async (divisionCode) => {
+    if (teamData[divisionCode]) return; // Sudah ada data
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/client/team/division/${divisionCode}`);
+      const data = await response.json();
+
+      if (data.success) {
+        // Update teamData dengan data baru (ini akan memerlukan state management yang lebih kompleks)
+        console.log('Loaded data for division:', divisionCode, data.data);
+      }
+    } catch (error) {
+      console.error('Error loading division data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Error state
+  if (error) {
+    return (
+      <Layout>
+        <Head title="Team - KSM IF" />
+        <main className="relative z-10 flex flex-col items-center min-h-screen px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
+          <div className="text-center text-white">
+            <h1 className="text-4xl font-bold mb-6">Oops!</h1>
+            <p className="text-xl text-red-400">{error}</p>
+          </div>
+        </main>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
+      <Head title="Team - KSM IF" />
       <main className="relative z-10 flex flex-col items-center min-h-screen px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
 
         {/* Hero Section */}
@@ -209,10 +264,39 @@ const Team = () => {
               animate={isTitleVisible ? "animate" : "initial"}
               custom={0.2}
             >
-              We are comprised of four departments, internal relation, public relation, human resource development, and creative design.
+              Periode {currentPeriode} - We are comprised of dedicated departments working together to build an amazing community.
             </motion.p>
           </motion.div>
         </div>
+
+        {/* Statistics Section */}
+        {teamStats && Object.keys(teamStats).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="w-full max-w-4xl mx-auto mb-12"
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white/5 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white">{teamStats.total_members || 0}</div>
+                <div className="text-sm text-white/60">Total Members</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white">{teamStats.total_divisions || 0}</div>
+                <div className="text-sm text-white/60">Divisions</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white">{teamStats.leadership_count || 0}</div>
+                <div className="text-sm text-white/60">Leadership</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-white">{currentPeriode.split('/')[0] || new Date().getFullYear()}</div>
+                <div className="text-sm text-white/60">Current Year</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Division Selection Buttons */}
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 mb-8">
@@ -224,13 +308,20 @@ const Team = () => {
                 active={activeDivision === division.id}
                 onClick={() => setActiveDivision(division.id)}
                 index={index}
+                memberCount={division.member_count}
               />
             ))}
           </div>
         </div>
 
         {/* Team Members Display */}
-        <TeamMembersByDivision activeDivision={activeDivision} />
+        <TeamMembersByDivision
+          activeDivision={activeDivision}
+          teamData={teamData}
+          divisions={divisions}
+          isLoading={isLoading}
+          onLoadDivision={handleLoadDivision}
+        />
 
         {/* Call to Action Section */}
         <motion.div
