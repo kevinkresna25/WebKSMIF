@@ -3,8 +3,10 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GaleriController;
 use App\Http\Controllers\ProgramKerjaController;
 use App\Http\Controllers\StrukturKsmController;
+use App\Models\Galeri;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -14,6 +16,7 @@ Route::controller(ClientController::class)->group(function () {
     Route::get('/team', 'team')->name('client.team');
     Route::get('/gallery', 'gallery')->name('client.gallery');
     Route::get('/list', 'list')->name('client.list');
+    Route::get('/gallery-detail/{programId}', 'galleryDetail');
 
     // API endpoints for AJAX requests
     Route::prefix('api/client')->group(function () {
@@ -119,17 +122,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     |--------------------------------------------------------------------------
     */
     Route::prefix('galeri')->name('galeri.')->group(function () {
-        Route::get('/', function () {
-            return inertia('admin/galeri/index');
-        })->name('index');
-        Route::get('/create', function () {
-            return inertia('admin/galeri/create');
-        })->name('create');
-        // Route::post('/', [GaleriController::class, 'store'])->name('store');
-        // Route::get('/{id}', [GaleriController::class, 'show'])->name('show');
-        // Route::get('/{id}/edit', [GaleriController::class, 'edit'])->name('edit');
-        // Route::put('/{id}', [GaleriController::class, 'update'])->name('update');
-        // Route::delete('/{id}', [GaleriController::class, 'destroy'])->name('destroy');
+        // Route::get('/', function () {
+        //     return inertia('admin/gallery/index');
+        // })->name('index');
+        // Route::get('/create', function () {
+        //     return inertia('admin/galeri/create');
+        // })->name('create');
+        Route::get('/', [GaleriController::class, 'index'])->name('index');
+        Route::post('/', [GaleriController::class, 'store'])->name('store');
+        Route::get('/{id}', [GaleriController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [GaleriController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [GaleriController::class, 'update'])->name('update');
+        Route::delete('/{id}', [GaleriController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-delete', [GaleriController::class, 'bulkDelete'])->name('bulk-delete');
 
         // Gallery Actions
         // Route::post('/upload-multiple', [GaleriController::class, 'uploadMultiple'])->name('upload-multiple');

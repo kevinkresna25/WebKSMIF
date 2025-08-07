@@ -48,11 +48,9 @@ class ClientController extends Controller
 
             // Ambil highlight anggota (BPH + beberapa koordinator)
             $teamHighlight = Struktur_ksm::with(['jabatan', 'divisi'])
-                ->where('is_active', true)
                 ->where('status_kepengurusan', 'aktif')
-                ->whereIn('jabatan_id', [1, 2, 5]) // Ketua, Wakil Ketua, Koordinator
+                ->where('divisi_kode', 'BPH') // Ketua, Wakil Ketua, Koordinator
                 ->orderBy('jabatan_id')
-                ->orderBy('nama')
                 ->limit(6)
                 ->get()
                 ->map(function ($member) {
@@ -67,6 +65,11 @@ class ClientController extends Controller
 
             // Ambil beberapa foto dari galeri terbaru
             $galleryPreview = Galeri::with('programKerja')
+                ->whereIn('id', function ($query) {
+                    $query->selectRaw('MIN(id)')
+                        ->from('galeris')
+                        ->groupBy('program_kerja_id');
+                })
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get()
@@ -76,13 +79,14 @@ class ClientController extends Controller
                         'original_name' => $galeri->original_name,
                         'image_url' => asset('storage/' . $galeri->storage_path),
                         'program_name' => $galeri->programKerja->nama ?? 'Unknown Program',
+                        'program_id' => $galeri->program_kerja_id,
                         'created_at' => $galeri->created_at,
                     ];
                 });
 
             // Statistik organisasi
             $stats = [
-                'total_members' => Struktur_ksm::where('is_active', true)->where('status_kepengurusan', 'aktif')->count(),
+                'total_members' => Struktur_ksm::where('status_kepengurusan', 'aktif')->count(),
                 'active_programs' => Program_kerja::where('masa_pendaftaran', true)->where('selesai', false)->count(),
                 'total_programs' => Program_kerja::count(),
                 'divisions' => Divisi::count(),
@@ -111,7 +115,6 @@ class ClientController extends Controller
         try {
             // Ambil data struktur yang aktif dengan relasi, dikelompokkan berdasarkan divisi
             $strukturData = Struktur_ksm::with(['jabatan', 'divisi'])
-                ->where('is_active', true)
                 ->where('status_kepengurusan', 'aktif')
                 ->orderBy('jabatan_id')
                 ->orderBy('nama')
@@ -136,7 +139,7 @@ class ClientController extends Controller
 
             // Ambil daftar divisi untuk navigation
             $divisions = Divisi::withCount(['strukturKsm' => function ($query) {
-                $query->where('is_active', true)->where('status_kepengurusan', 'aktif');
+                $query->where('status_kepengurusan', 'aktif');
             }])
                 ->orderBy('nama')
                 ->get()
@@ -152,10 +155,10 @@ class ClientController extends Controller
 
             // Statistik team
             $teamStats = [
-                'total_members' => Struktur_ksm::where('is_active', true)->where('status_kepengurusan', 'aktif')->count(),
+                'total_members' => Struktur_ksm::where('status_kepengurusan', 'aktif')->count(),
                 'total_divisions' => Divisi::count(), // +1 untuk BPH
                 'current_periode' => $this->getCurrentPeriode(),
-                'leadership_count' => Struktur_ksm::whereIn('jabatan_id', [1, 2, 5, 6])->where('is_active', true)->count(), // Ketua, Wakil, Koordinator, Wakil Koordinator
+                'leadership_count' => Struktur_ksm::whereIn('jabatan_id', [1, 2, 5, 6])->where('status_kepengurusan', 'aktif')->count(), // Ketua, Wakil, Koordinator, Wakil Koordinator
             ];
 
             return Inertia::render('client/team', [
@@ -181,6 +184,11 @@ class ClientController extends Controller
 
             // Query dasar untuk galeri
             $query = Galeri::with(['programKerja', 'uploader'])
+                ->whereIn('id', function ($q) {
+                    $q->selectRaw('MIN(id)')
+                        ->from('galeris')
+                        ->groupBy('program_kerja_id');
+                })
                 ->orderBy('created_at', 'desc');
 
             // Filter berdasarkan program
@@ -240,7 +248,7 @@ class ClientController extends Controller
                 'total_size' => Galeri::sum('size'), // Total ukuran file dalam bytes
             ];
 
-            return Inertia::render('Gallery', [
+            return Inertia::render('client/gallery', [
                 'galleries' => [
                     'data' => $galleryData,
                     'current_page' => $galleries->currentPage(),
@@ -286,6 +294,31 @@ class ClientController extends Controller
                 'error' => 'Gagal memuat data galeri',
             ]);
         }
+    }
+
+    public function galleryDetail($program_kerja_id)
+    {
+        $program = Program_kerja::with('galeris')->findOrFail($program_kerja_id);
+
+        return inertia('client/gallery-detail/show', [
+            'programId' => $program->id,
+            'programData' => [
+                'id' => $program->id,
+                'nama' => $program->nama,
+                'deskripsi' => $program->deskripsi,
+                'lokasi' => $program->lokasi,
+                'tanggal_mulai_acara' => $program->tanggal_mulai_acara,
+                'tanggal_selesai_acara' => $program->tanggal_selesai_acara,
+                'target_peserta' => $program->target_peserta,
+                'gallery' => $program->galeris->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'original_name' => $image->original_name,
+                        'image_url' => asset('storage/' . $image->storage_path),
+                    ];
+                }),
+            ],
+        ]);
     }
 
     /**
@@ -458,7 +491,6 @@ class ClientController extends Controller
     {
         try {
             $query = Struktur_ksm::with(['jabatan', 'divisi'])
-                ->where('is_active', true)
                 ->where('status_kepengurusan', 'aktif');
 
             if ($divisi_kode && $divisi_kode !== 'all') {

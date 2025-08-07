@@ -2,16 +2,46 @@ import Layout from "../../components/layouts/layout";
 import { motion, AnimatePresence } from "framer-motion";
 import animations from "../../utilities/animations";
 import { useInView } from "../../hooks/useInView";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { router } from '@inertiajs/react';
 
-// FIXED Gallery Item Component - menggunakan pattern yang sama dengan team.jsx
-const GalleryItem = ({ image, title, date, category, index, isVisible }) => (
+// Loading Skeleton Component
+const GalleryItemSkeleton = () => (
+  <div className="relative group cursor-pointer overflow-hidden rounded-xl animate-pulse">
+    <div className="aspect-video w-full bg-gray-700"></div>
+    <div className="absolute top-4 left-4">
+      <div className="bg-gray-600 h-6 w-20 rounded-full"></div>
+    </div>
+  </div>
+);
+
+// Error State Component
+const ErrorState = ({ message, onRetry }) => (
   <motion.div
-    // FIX: Gunakan pattern yang sama dengan TeamMember di team.jsx
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="text-center py-20"
+  >
+    <div className="text-red-400 text-6xl mb-4">⚠️</div>
+    <h3 className="text-2xl font-semibold text-white mb-2">Oops! Something went wrong</h3>
+    <p className="text-white/70 mb-6">{message}</p>
+    <button
+      onClick={onRetry}
+      className="px-6 py-3 bg-[#6434F1] text-white rounded-lg hover:bg-[#5228E0] transition-colors"
+    >
+      Try Again
+    </button>
+  </motion.div>
+);
+
+// Gallery Item Component
+const GalleryItem = ({ image, title, date, category, index, isVisible, onClick }) => (
+  <motion.div
     initial={animations.fade.fadeInUp}
     animate={isVisible ? animations.fade.fadeInUp.animate(index) : animations.fade.fadeInUp}
     transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 * index }}
     className="relative group cursor-pointer overflow-hidden rounded-xl transform transition-all duration-500 hover:scale-105 hover:shadow-2xl"
+    onClick={onClick}
   >
     {/* Image */}
     <div className="aspect-video w-full overflow-hidden bg-gray-800">
@@ -22,6 +52,7 @@ const GalleryItem = ({ image, title, date, category, index, isVisible }) => (
         onError={(e) => {
           e.target.src = "/images/placeholder.png";
         }}
+        loading="lazy"
       />
     </div>
 
@@ -35,9 +66,6 @@ const GalleryItem = ({ image, title, date, category, index, isVisible }) => (
     {/* Overlay with gradient and content */}
     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
       <div className="absolute bottom-0 left-0 right-0 p-6">
-        <h3 className="text-white font-semibold text-lg mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-          {title}
-        </h3>
         {date && (
           <p className="text-white/80 text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
             {new Date(date).toLocaleDateString('id-ID', {
@@ -55,8 +83,8 @@ const GalleryItem = ({ image, title, date, category, index, isVisible }) => (
   </motion.div>
 );
 
-// FIXED Pagination Component
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+// Pagination Component
+const Pagination = ({ currentPage, totalPages, onPageChange, loading }) => {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -89,13 +117,13 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   return (
     <div className="flex items-center justify-center space-x-2 mt-12">
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
+        whileHover={{ scale: !loading ? 1.05 : 1 }}
+        whileTap={{ scale: !loading ? 0.95 : 1 }}
+        onClick={() => !loading && onPageChange(currentPage - 1)}
+        disabled={currentPage === 1 || loading}
         className={`
           px-4 py-2 rounded-lg font-medium transition-all duration-300
-          ${currentPage === 1
+          ${currentPage === 1 || loading
             ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
             : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/20'
           }
@@ -107,16 +135,18 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       {getPageNumbers().map((page, index) => (
         <motion.button
           key={index}
-          whileHover={{ scale: page !== '...' ? 1.1 : 1 }}
-          whileTap={{ scale: page !== '...' ? 0.9 : 1 }}
-          onClick={() => page !== '...' && onPageChange(page)}
-          disabled={page === '...'}
+          whileHover={{ scale: page !== '...' && !loading ? 1.1 : 1 }}
+          whileTap={{ scale: page !== '...' && !loading ? 0.9 : 1 }}
+          onClick={() => !loading && page !== '...' && onPageChange(page)}
+          disabled={page === '...' || loading}
           className={`
             w-10 h-10 rounded-lg font-medium transition-all duration-300
             ${page === currentPage
               ? 'bg-[#6434F1] text-white shadow-lg'
               : page === '...'
               ? 'text-white/50 cursor-default'
+              : loading
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
               : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/20'
             }
           `}
@@ -126,13 +156,13 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       ))}
 
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
+        whileHover={{ scale: !loading ? 1.05 : 1 }}
+        whileTap={{ scale: !loading ? 0.95 : 1 }}
+        onClick={() => !loading && onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages || loading}
         className={`
           px-4 py-2 rounded-lg font-medium transition-all duration-300
-          ${currentPage === totalPages
+          ${currentPage === totalPages || loading
             ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
             : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/20'
           }
@@ -144,89 +174,203 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   );
 };
 
-// FIXED Category Filter Component
-const CategoryFilter = ({ categories, selectedCategory, onCategoryChange }) => {
+// Category Filter Component
+const CategoryFilter = ({ programs, selectedProgram, onProgramChange, loading }) => {
+  const categories = [
+    { id: 'all', nama: 'All' },
+    ...programs
+  ];
+
   return (
     <div className="flex flex-wrap justify-center gap-3 mb-12">
-      {categories.map((category, index) => (
+      {categories.map((program, index) => (
         <motion.button
-          key={category}
-          // FIX: Gunakan pattern sederhana seperti DivisionButton di team.jsx
+          key={program.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: index * 0.1 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onCategoryChange(category)}
+          whileHover={{ scale: !loading ? 1.05 : 1 }}
+          whileTap={{ scale: !loading ? 0.95 : 1 }}
+          onClick={() => !loading && onProgramChange(program.id)}
+          disabled={loading}
           className={`
             px-6 py-3 rounded-full font-medium transition-all duration-300 backdrop-blur-sm
-            ${selectedCategory === category
+            ${selectedProgram === program.id
               ? 'bg-[#6434F1] text-white shadow-lg border border-[#6434F1]'
+              : loading
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-600'
               : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
             }
           `}
         >
-          {category}
+          {program.nama}
         </motion.button>
       ))}
     </div>
   );
 };
 
-// FULLY FIXED Main Gallery Component
-const Gallery = () => {
+// Search Component
+const SearchInput = ({ searchTerm, onSearchChange, loading }) => {
+  return (
+    <div className="max-w-md mx-auto mb-8">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search photos..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          disabled={loading}
+          className="w-full px-4 py-3 pl-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#6434F1] focus:border-transparent transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+          <svg className="w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Helper function to format file size
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Main Gallery Component
+const Gallery = ({
+  galleries = { data: [], current_page: 1, last_page: 1, total: 0, from: 0, to: 0 },
+  programs = [],
+  galleryStats = { total_photos: 0, total_programs_with_photos: 0, total_size: 0 },
+  filters = { program: null, search: null, per_page: 12 },
+  error = null
+}) => {
   const [galleryRef, isGalleryVisible] = useInView();
   const [titleRef, isTitleVisible] = useInView();
   const [filterRef, isFilterVisible] = useInView();
   const [infoRef, isInfoVisible] = useInView();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const itemsPerPage = 6;
+  // State management
+  const [loading, setLoading] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState(filters.program || 'all');
+  const [searchTerm, setSearchTerm] = useState(filters.search || '');
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
-  const allGalleryItems = [
-    { id: 1, image: "/images/event1.png", title: "Workshop Web Development", date: "2024-01-15", category: "Workshop" },
-    { id: 2, image: "/images/event1.png", title: "Seminar AI & Machine Learning", date: "2024-02-20", category: "Seminar" },
-    { id: 3, image: "/images/event1.png", title: "Hackathon Competition 2024", date: "2024-03-10", category: "Competition" },
-    { id: 4, image: "/images/event1.png", title: "Study Tour to Tech Company", date: "2024-04-05", category: "Study Tour" },
-    { id: 5, image: "/images/event1.png", title: "Programming Bootcamp", date: "2024-05-15", category: "Workshop" },
-    { id: 6, image: "/images/event1.png", title: "Alumni Networking Event", date: "2024-06-01", category: "Networking" },
-    { id: 7, image: "/images/event1.png", title: "Mobile App Development Workshop", date: "2024-07-12", category: "Workshop" },
-    { id: 8, image: "/images/event1.png", title: "Cybersecurity Seminar", date: "2024-08-18", category: "Seminar" },
-    { id: 9, image: "/images/event1.png", title: "Game Development Competition", date: "2024-09-25", category: "Competition" },
-    { id: 10, image: "/images/event1.png", title: "Tech Talk with Industry Experts", date: "2024-10-30", category: "Seminar" },
-    { id: 11, image: "/images/event1.png", title: "UI/UX Design Workshop", date: "2024-11-14", category: "Workshop" },
-    { id: 12, image: "/images/event1.png", title: "Annual Tech Conference 2024", date: "2024-12-05", category: "Conference" },
-    { id: 13, image: "/images/event1.png", title: "Database Management Training", date: "2024-12-20", category: "Workshop" },
-    { id: 14, image: "/images/event1.png", title: "Cloud Computing Seminar", date: "2025-01-08", category: "Seminar" },
-    { id: 15, image: "/images/event1.png", title: "Software Testing Bootcamp", date: "2025-02-15", category: "Workshop" }
-  ];
+  // Transform gallery data for display
+  const transformedGalleryData = galleries.data.map(item => ({
+    id: item.id,
+    image: item.image_url,
+    title: item.original_name ? item.original_name.replace(/\.[^/.]+$/, "") : 'Untitled',
+    date: item.created_at,
+    category: item.program?.nama || 'Unknown Program',
+    size: item.size,
+    uploader: item.uploader?.name || 'Unknown',
+    program_id: item.program.id
+  }));
 
-  const categories = ['All', ...new Set(allGalleryItems.map(item => item.category))];
-
-  const filteredItems = selectedCategory === 'All'
-    ? allGalleryItems
-    : allGalleryItems.filter(item => item.category === selectedCategory);
-
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
-
+  // Handle page change
   const handlePageChange = (page) => {
-    setCurrentPage(page);
-    galleryRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setLoading(true);
+
+    router.get(route('gallery'), {
+      page,
+      program: selectedProgram !== 'all' ? selectedProgram : null,
+      search: searchTerm || null,
+      per_page: filters.per_page
+    }, {
+      preserveState: true,
+      preserveScroll: false,
+      onFinish: () => {
+        setLoading(false);
+        galleryRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
   };
 
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    setCurrentPage(1);
+  // Handle program filter change
+  const handleProgramChange = (programId) => {
+    setSelectedProgram(programId);
+    setLoading(true);
+
+    router.get(route('gallery'), {
+      program: programId !== 'all' ? programId : null,
+      search: searchTerm || null,
+      per_page: filters.per_page,
+      page: 1 // Reset to first page
+    }, {
+      preserveState: true,
+      preserveScroll: false,
+      onFinish: () => setLoading(false)
+    });
+  };
+
+  // Handle search with debounce
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for debounced search
+    const newTimeout = setTimeout(() => {
+      setLoading(true);
+
+      router.get(route('gallery'), {
+        search: value || null,
+        program: selectedProgram !== 'all' ? selectedProgram : null,
+        per_page: filters.per_page,
+        page: 1 // Reset to first page
+      }, {
+        preserveState: true,
+        preserveScroll: false,
+        onFinish: () => setLoading(false)
+      });
+    }, 500);
+
+    setSearchTimeout(newTimeout);
+  };
+
+  // Handle retry
+  const handleRetry = () => {
+    setLoading(true);
+    router.reload({
+      onFinish: () => setLoading(false)
+    });
+  };
+
+  // Handle item click (for future modal or detail view)
+  const handleItemClick = (item) => {
+    console.log('Gallery item clicked:', item);
+    router.get(`/gallery-detail/${item.program_id}`);
+  };
+
+  // Clear search and filters
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedProgram('all');
+    setLoading(true);
+
+    router.get(route('gallery'), {
+      per_page: filters.per_page
+    }, {
+      preserveState: true,
+      preserveScroll: false,
+      onFinish: () => setLoading(false)
+    });
   };
 
   return (
     <Layout>
       <main className="relative z-10 flex flex-col items-center min-h-screen px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
 
-        {/* FIXED Hero Section - menggunakan pattern yang sama dengan team.jsx */}
+        {/* Hero Section */}
         <div ref={titleRef} className="text-center relative top-16 mb-20">
           <motion.div
             variants={animations.fade.fadeInUp}
@@ -245,8 +389,21 @@ const Gallery = () => {
               animate={isTitleVisible ? "animate" : "initial"}
               custom={0.2}
             >
-              Events and activities from KSM IF during the current period.
+              Dokumentasi kegiatan dan acara KSM IF periode saat ini.
             </motion.p>
+
+            {/* Stats */}
+            {galleryStats.total_photos > 0 && (
+              <motion.div
+                className="mt-8 text-white/60 text-sm"
+                variants={animations.fade.fadeInUp}
+                initial="initial"
+                animate={isTitleVisible ? "animate" : "initial"}
+                custom={0.4}
+              >
+                {galleryStats.total_photos} foto • {galleryStats.total_programs_with_photos} program • {formatFileSize(galleryStats.total_size)}
+              </motion.div>
+            )}
           </motion.div>
         </div>
 
@@ -254,16 +411,14 @@ const Gallery = () => {
         <section ref={galleryRef} className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
           <div className="max-w-7xl mx-auto">
 
-            {/* FIXED Category Filter */}
-            <div ref={filterRef}>
-              <CategoryFilter
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onCategoryChange={handleCategoryChange}
-              />
-            </div>
+            {/* Search Input */}
+            <SearchInput
+              searchTerm={searchTerm}
+              onSearchChange={handleSearchChange}
+              loading={loading}
+            />
 
-            {/* FIXED Gallery Info */}
+            {/* Gallery Info */}
             <motion.div
               ref={infoRef}
               variants={animations.fade.fadeInUp}
@@ -272,38 +427,65 @@ const Gallery = () => {
               custom={0}
               className="text-center mb-8"
             >
-              <p className="text-white/70 text-lg">
-                Showing {currentItems.length} of {filteredItems.length} {selectedCategory !== 'All' ? selectedCategory.toLowerCase() : ''} events
-                {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
-              </p>
+              {loading ? (
+                <div className="animate-pulse">
+                  <div className="h-6 bg-white/20 rounded w-64 mx-auto"></div>
+                </div>
+              ) : galleries.total > 0 ? (
+                <p className="text-white/70 text-lg">
+                  Showing {galleries.from || 0} - {galleries.to || 0} of {galleries.total} photos
+                  {selectedProgram !== 'all' && programs.find(p => p.id === selectedProgram) &&
+                    ` in ${programs.find(p => p.id === selectedProgram).nama}`
+                  }
+                  {searchTerm && ` matching "${searchTerm}"`}
+                  {galleries.last_page > 1 && ` (Page ${galleries.current_page} of ${galleries.last_page})`}
+                </p>
+              ) : null}
             </motion.div>
 
-            {/* Gallery Grid */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${selectedCategory}-${currentPage}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 place-items-center"
-              >
-                {currentItems.map((item, index) => (
-                  <GalleryItem
-                    key={item.id}
-                    image={item.image}
-                    title={item.title}
-                    date={item.date}
-                    category={item.category}
-                    index={index}
-                    isVisible={isGalleryVisible}
-                  />
-                ))}
-              </motion.div>
-            </AnimatePresence>
+            {/* Error State */}
+            {error && !loading && (
+              <ErrorState message={error} onRetry={handleRetry} />
+            )}
 
-            {/* FIXED Empty State */}
-            {currentItems.length === 0 && (
+            {/* Loading State */}
+            {loading && !error && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 place-items-center">
+                {[...Array(6)].map((_, index) => (
+                  <GalleryItemSkeleton key={index} />
+                ))}
+              </div>
+            )}
+
+            {/* Gallery Grid */}
+            {!loading && !error && (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${selectedProgram}-${galleries.current_page}-${searchTerm}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 place-items-center"
+                >
+                  {transformedGalleryData.map((item, index) => (
+                    <GalleryItem
+                      key={item.id}
+                      image={item.image}
+                      title={item.title}
+                      date={item.date}
+                      category={item.category}
+                      index={index}
+                      isVisible={isGalleryVisible}
+                      onClick={() => handleItemClick(item)}
+                    />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && transformedGalleryData.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -311,19 +493,35 @@ const Gallery = () => {
                 className="text-center py-20"
               >
                 <div className="text-white/50 text-6xl mb-4">📷</div>
-                <h3 className="text-2xl font-semibold text-white mb-2">No events found</h3>
+                <h3 className="text-2xl font-semibold text-white mb-2">
+                  {searchTerm ? 'No photos found' : 'No photos available'}
+                </h3>
                 <p className="text-white/70">
-                  No {selectedCategory.toLowerCase()} events available at the moment.
+                  {searchTerm
+                    ? `No photos match your search "${searchTerm}"`
+                    : selectedProgram !== 'all'
+                    ? `No photos found in ${programs.find(p => p.id === selectedProgram)?.nama || 'selected'} program`
+                    : 'No photos have been uploaded yet.'
+                  }
                 </p>
+                {(searchTerm || selectedProgram !== 'all') && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="mt-4 px-6 py-3 bg-[#6434F1] text-white rounded-lg hover:bg-[#5228E0] transition-colors"
+                  >
+                    Show All Photos
+                  </button>
+                )}
               </motion.div>
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {!loading && !error && galleries.last_page > 1 && (
               <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
+                currentPage={galleries.current_page}
+                totalPages={galleries.last_page}
                 onPageChange={handlePageChange}
+                loading={loading}
               />
             )}
           </div>

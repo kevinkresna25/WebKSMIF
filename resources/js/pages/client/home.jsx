@@ -4,7 +4,9 @@ import { motion, AnimatePresence} from 'framer-motion';
 import animations from '../../utilities/animations';
 import RegistrationModal from '../../components/ui/registrationModal';
 import { useInView } from '../../hooks/useInView';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { Eye } from 'lucide-react';
+
 
 const MainLogo = () => {
   return (
@@ -740,11 +742,12 @@ const OngoingEventSection = ({ featuredPrograms, onRegister }) => {
 
 // ============ GALLERY SECTION ============
 
-const GalleryItem = ({ image, title, index, isVisible }) => (
+const GalleryItem = ({ image, title, index, isVisible, onClick, programId }) => (
   <motion.div
-    initial={animations.fade.fadeInUp}
-    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+    initial={animations.fade.fadeInUp.initial}
+    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp.initial}
     transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 * index }}
+    onClick={() => onClick(programId)}
     className="relative group cursor-pointer overflow-hidden rounded-lg transform transition-all duration-500 hover:scale-105 hover:shadow-2xl"
   >
     {/* Image */}
@@ -762,6 +765,10 @@ const GalleryItem = ({ image, title, index, isVisible }) => (
         <h3 className="text-white font-semibold text-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
           {title}
         </h3>
+        <div className="flex items-center gap-2 text-white/80 text-sm mt-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">
+          <Eye size={16} />
+          <span>View Gallery</span>
+        </div>
       </div>
     </div>
 
@@ -773,13 +780,29 @@ const GalleryItem = ({ image, title, index, isVisible }) => (
 const GallerySectionWithData = ({ galleryPreview }) => {
     const [galleryRef, isVisible] = useInView();
 
+    const handleGalleryClick = (programId) => {
+        router.get(`/gallery-detail/${programId}`);
+    };
+
+    // Transform data dari controller agar sesuai dengan props GalleryItem
+    const transformedGalleryData = galleryPreview?.map(galeri => ({
+        id: galeri.id,
+        image: galeri.image_url,        // Mapping image_url ke image
+        title: galeri.program_name,      // Mapping program_name ke title
+        program_id: galeri.program_id,   // ID program untuk navigasi
+        original_name: galeri.original_name,
+        created_at: galeri.created_at
+    })) || [];
+
+    console.log('Transformed Gallery Data:', transformedGalleryData);
+
     return (
         <section ref={galleryRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-16">
                     <motion.div
-                        initial={animations.fade.fadeInUp}
-                        animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                        initial={animations.fade.fadeInUp.initial}
+                        animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp.initial}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                     >
                         <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8">
@@ -788,8 +811,8 @@ const GallerySectionWithData = ({ galleryPreview }) => {
                     </motion.div>
 
                     <motion.div
-                        initial={animations.fade.fadeInUp}
-                        animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                        initial={animations.fade.fadeInUp.initial}
+                        animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp.initial}
                         transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                     >
                         <p className="text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed">
@@ -799,39 +822,41 @@ const GallerySectionWithData = ({ galleryPreview }) => {
                 </div>
 
                 {/* Gallery Grid - menggunakan data dari database */}
-                {galleryPreview && galleryPreview.length > 0 ? (
+                {transformedGalleryData && transformedGalleryData.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
-                        {galleryPreview.map((item, index) => (
+                        {transformedGalleryData.map((item, index) => (
                             <GalleryItem
                                 key={item.id}
-                                image={item.image_url}
-                                title={item.program_name}
+                                image={item.image}
+                                title={item.title}
                                 index={index}
                                 isVisible={isVisible}
+                                onClick={handleGalleryClick}
+                                programId={item.program_id} // Gunakan program_id untuk navigasi ke detail gallery
                             />
                         ))}
                     </div>
                 ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center"
-            >
-              <div className="text-white/30 text-8xl mb-6">📸</div>
-              <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4">
-                Tidak Ada Gallery
-              </h3>
-              <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
-                Saat ini tidak ada gallery.
-                Pantau terus media sosial kami untuk informasi event terbaru!
-              </p>
-            </motion.div>
-          )}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                        className="text-center"
+                    >
+                        <div className="text-white/30 text-8xl mb-6">📸</div>
+                        <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4">
+                            Tidak Ada Gallery
+                        </h3>
+                        <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+                            Saat ini tidak ada gallery.
+                            Pantau terus media sosial kami untuk informasi event terbaru!
+                        </p>
+                    </motion.div>
+                )}
 
                 {/* View More Button */}
                 <motion.div
-                    initial={animations.fade.fadeInUp}
-                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
+                    initial={animations.fade.fadeInUp.initial}
+                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp.initial}
                     transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
                     className="text-center"
                 >

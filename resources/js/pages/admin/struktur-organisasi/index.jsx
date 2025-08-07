@@ -38,13 +38,12 @@ const StrukturOrganisasiPage = ({
   // View mode state
   const [viewMode, setViewMode] = useState('grid');
 
-  // Form data state - sesuai dengan database schema
+  // Form data state
   const [formData, setFormData] = useState({
     nama: '',
     jabatan_id: '',
     divisi_kode: '',
     periode: '',
-    is_active: true,
     status_kepengurusan: 'aktif',
     foto_profil: null
   });
@@ -60,9 +59,7 @@ const StrukturOrganisasiPage = ({
   // UTILITY FUNCTIONS
   // ===========================
   const getStatusColor = (struktur) => {
-    if (!struktur.is_active) {
-      return 'bg-gray-100 text-gray-800 border-gray-200';
-    } else if (struktur.status_kepengurusan === 'aktif') {
+    if (struktur.status_kepengurusan === 'aktif') {
       return 'bg-green-100 text-green-800 border-green-200';
     } else if (struktur.status_kepengurusan === 'non-aktif') {
       return 'bg-red-100 text-red-800 border-red-200';
@@ -72,14 +69,12 @@ const StrukturOrganisasiPage = ({
   };
 
   const getStatusText = (struktur) => {
-    if (!struktur.is_active) {
-      return 'Tidak Aktif';
-    } else if (struktur.status_kepengurusan === 'aktif') {
+    if (struktur.status_kepengurusan === 'aktif') {
       return 'Aktif';
     } else if (struktur.status_kepengurusan === 'non-aktif') {
       return 'Non-Aktif';
     } else {
-      return struktur.status_kepengurusan;
+      return struktur.status_kepengurusan || 'Tidak Diketahui';
     }
   };
 
@@ -108,11 +103,7 @@ const StrukturOrganisasiPage = ({
       const matchesDivisi = filterDivisi === 'all' || struktur.divisi_kode === filterDivisi;
 
       let matchesStatus = true;
-      if (filterStatus === 'active') {
-        matchesStatus = struktur.is_active === true || struktur.is_active === 1;
-      } else if (filterStatus === 'inactive') {
-        matchesStatus = struktur.is_active === false || struktur.is_active === 0;
-      } else if (filterStatus === 'aktif') {
+      if (filterStatus === 'aktif') {
         matchesStatus = struktur.status_kepengurusan === 'aktif';
       } else if (filterStatus === 'non-aktif') {
         matchesStatus = struktur.status_kepengurusan === 'non-aktif';
@@ -153,7 +144,6 @@ const StrukturOrganisasiPage = ({
       jabatan_id: '',
       divisi_kode: '',
       periode: '',
-      is_active: true,
       status_kepengurusan: 'aktif',
       foto_profil: null
     });
@@ -178,13 +168,13 @@ const StrukturOrganisasiPage = ({
 
   const openEditModal = (struktur) => {
     setFormData({
+        id: struktur.id,
       nama: struktur.nama || '',
       jabatan_id: struktur.jabatan_id || '',
       divisi_kode: struktur.divisi_kode || '',
       periode: struktur.periode || '',
-      is_active: Boolean(struktur.is_active),
       status_kepengurusan: struktur.status_kepengurusan || 'aktif',
-      foto_profil: null
+      foto_profil: struktur.foto_profil || ''
     });
     setSelectedStruktur(struktur);
     setShowEditModal(true);
@@ -221,11 +211,11 @@ const StrukturOrganisasiPage = ({
 
       const formDataToSend = new FormData();
 
-      // Add all form fields to FormData - sesuai database schema
+      // Add all form fields to FormData
+      formDataToSend.append('id', formData.id);
       formDataToSend.append('nama', formData.nama);
       formDataToSend.append('jabatan_id', formData.jabatan_id);
       formDataToSend.append('periode', formData.periode);
-      formDataToSend.append('is_active', formData.is_active ? '1' : '0');
       formDataToSend.append('status_kepengurusan', formData.status_kepengurusan);
 
       if (formData.divisi_kode) {
@@ -289,39 +279,71 @@ const StrukturOrganisasiPage = ({
 
   const handleDelete = async (struktur) => {
     if (!window.confirm(`Apakah Anda yakin ingin menghapus "${struktur.nama}" dari struktur organisasi?`)) {
-      return;
+        return;
     }
 
-    try {
-      await fetch('/sanctum/csrf-cookie', { credentials: 'include' });
+    setIsLoading(true);
+    setMessage('');
 
-      const response = await fetch(`/admin/struktur-organisasi/${struktur.id}`, {
+    try {
+        // Get CSRF token
+        await fetch('/sanctum/csrf-cookie', {
+        credentials: 'include'
+        });
+
+        // Log untuk debugging
+        console.log('Deleting struktur:', {
+        id: struktur.id,
+        nama: struktur.nama
+        });
+
+        const response = await fetch(`/admin/struktur-organisasi/${struktur.id}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            'Accept': 'application/json'
+        },
+        // TAMBAHKAN: Kirim data dalam body untuk memastikan request diterima dengan benar
+        body: JSON.stringify({
+            id: struktur.id,
+            _method: 'DELETE' // Laravel method spoofing
+        })
+        });
+
+        console.log('Delete response status:', response.status);
+
+        // Cek apakah response berhasil
+        if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
         }
-      });
 
-      const data = await response.json();
+        const data = await response.json();
+        console.log('Delete response data:', data);
 
-      if (data.success) {
+        if (data.success) {
+        // Update state untuk menghapus item dari list
         setStrukturList(prev => prev.filter(s => s.id !== struktur.id));
+
         setMessage('Data berhasil dihapus');
         setMessageType('success');
 
+        // Clear message after 3 seconds
         setTimeout(() => setMessage(''), 3000);
-      } else {
+        } else {
         setMessage(data.message || 'Gagal menghapus data');
         setMessageType('error');
-      }
+        }
     } catch (error) {
-      console.error('Delete error:', error);
-      setMessage('Terjadi kesalahan saat menghapus data');
-      setMessageType('error');
+        console.error('Delete error:', error);
+        setMessage('Terjadi kesalahan saat menghapus data: ' + error.message);
+        setMessageType('error');
+    } finally {
+        setIsLoading(false);
     }
-  };
+    };
 
   // ===========================
   // MAIN RENDER
@@ -419,10 +441,8 @@ const StrukturOrganisasiPage = ({
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">Semua Status</option>
-                <option value="active">Aktif</option>
-                <option value="inactive">Tidak Aktif</option>
-                <option value="aktif">Status Aktif</option>
-                <option value="non-aktif">Status Non-Aktif</option>
+                <option value="aktif">Aktif</option>
+                <option value="non-aktif">Non-Aktif</option>
               </select>
 
               <select
@@ -461,28 +481,22 @@ const StrukturOrganisasiPage = ({
 
           {/* Statistics Dashboard */}
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{strukturList.length}</div>
                 <div className="text-sm text-gray-600">Total Anggota</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {strukturList.filter(s => s.is_active && s.status_kepengurusan === 'aktif').length}
+                  {strukturList.filter(s => s.status_kepengurusan === 'aktif').length}
                 </div>
                 <div className="text-sm text-gray-600">Aktif</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">
+                <div className="text-2xl font-bold text-red-600">
                   {strukturList.filter(s => s.status_kepengurusan === 'non-aktif').length}
                 </div>
                 <div className="text-sm text-gray-600">Non-Aktif</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">
-                  {strukturList.filter(s => !s.is_active).length}
-                </div>
-                <div className="text-sm text-gray-600">Tidak Aktif</div>
               </div>
             </div>
           </div>
@@ -1035,34 +1049,19 @@ const StrukturModal = ({
             </div>
           </div>
 
-          {/* Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status Kepengurusan
-              </label>
-              <select
-                value={formData.status_kepengurusan || 'aktif'}
-                onChange={(e) => onInputChange('status_kepengurusan', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="aktif">Aktif</option>
-                <option value="non-aktif">Non-Aktif</option>
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2 mt-6">
-              <input
-                type="checkbox"
-                id="is_active"
-                checked={formData.is_active || false}
-                onChange={(e) => onInputChange('is_active', e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
-                Aktif dalam sistem
-              </label>
-            </div>
+          {/* Status Kepengurusan */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status Kepengurusan
+            </label>
+            <select
+              value={formData.status_kepengurusan || 'aktif'}
+              onChange={(e) => onInputChange('status_kepengurusan', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="aktif">Aktif</option>
+              <option value="non-aktif">Non-Aktif</option>
+            </select>
           </div>
 
           {/* Action Buttons */}
@@ -1154,7 +1153,7 @@ const DetailModal = ({
 
         {/* Detail Informasi */}
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <h4 className="font-semibold text-gray-700 mb-1">Jabatan</h4>
               <p className="text-gray-600">{getJabatanName(struktur.jabatan_id)}</p>
@@ -1174,11 +1173,6 @@ const DetailModal = ({
               <h4 className="font-semibold text-gray-700 mb-1">Status Kepengurusan</h4>
               <p className="text-gray-600 capitalize">{struktur.status_kepengurusan}</p>
             </div>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-gray-700 mb-1">Status Sistem</h4>
-            <p className="text-gray-600">{struktur.is_active ? 'Aktif' : 'Tidak Aktif'}</p>
           </div>
         </div>
 

@@ -16,13 +16,8 @@ class Struktur_ksm extends Model
         'jabatan_id',
         'divisi_kode',
         'periode',
-        'is_active',
         'status_kepengurusan',
         'foto_profil'
-    ];
-
-    protected $casts = [
-        'is_active' => 'boolean'
     ];
 
     // Relationships
@@ -44,7 +39,7 @@ class Struktur_ksm extends Model
     // Scopes
     public function scopeAktif($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status_kepengurusan', 'aktif');
     }
 
     public function scopePeriode($query, $periode)
@@ -137,7 +132,6 @@ class Struktur_ksm extends Model
     public function aktifkan()
     {
         $this->update([
-            'is_active' => true,
             'status_kepengurusan' => 'aktif'
         ]);
     }
@@ -145,7 +139,6 @@ class Struktur_ksm extends Model
     public function nonaktifkan()
     {
         $this->update([
-            'is_active' => false,
             'status_kepengurusan' => 'non-aktif'
         ]);
     }

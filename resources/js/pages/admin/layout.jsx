@@ -450,7 +450,7 @@ const AdminLayout = ({
         />
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
           {children}
         </main>
       </div>

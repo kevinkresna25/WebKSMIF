@@ -8,6 +8,8 @@ use App\Models\Divisi;
 use App\Http\Requests\StoreStruktur_ksmRequest;
 use App\Http\Requests\UpdateStruktur_ksmRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -31,7 +33,6 @@ class StrukturKsmController extends Controller
                         'jabatan_id' => $struktur->jabatan_id,
                         'divisi_kode' => $struktur->divisi_kode,
                         'periode' => $struktur->periode,
-                        'is_active' => $struktur->is_active,
                         'status_kepengurusan' => $struktur->status_kepengurusan,
                         'foto_profil' => $struktur->foto_profil,
                         'jabatan' => $struktur->jabatan ? [
@@ -110,7 +111,6 @@ class StrukturKsmController extends Controller
                 'jabatan_id' => 'required|exists:jabatans,id',
                 'divisi_kode' => 'nullable|exists:divisis,kode',
                 'periode' => 'required|string|max:9',
-                'is_active' => 'boolean',
                 'status_kepengurusan' => 'required|in:aktif,non-aktif',
                 'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
@@ -135,7 +135,6 @@ class StrukturKsmController extends Controller
                 'jabatan_id' => $request->jabatan_id,
                 'divisi_kode' => $request->divisi_kode,
                 'periode' => $request->periode,
-                'is_active' => $request->boolean('is_active', true),
                 'status_kepengurusan' => $request->status_kepengurusan ?? 'aktif',
                 'foto_profil' => $fotoPath,
             ]);
@@ -153,7 +152,6 @@ class StrukturKsmController extends Controller
                         'jabatan_id' => $struktur->jabatan_id,
                         'divisi_kode' => $struktur->divisi_kode,
                         'periode' => $struktur->periode,
-                        'is_active' => $struktur->is_active,
                         'status_kepengurusan' => $struktur->status_kepengurusan,
                         'foto_profil' => $struktur->foto_profil,
                         'jabatan' => $struktur->jabatan ? [
@@ -200,7 +198,6 @@ class StrukturKsmController extends Controller
                 'jabatan_id' => $struktur_ksm->jabatan_id,
                 'divisi_kode' => $struktur_ksm->divisi_kode,
                 'periode' => $struktur_ksm->periode,
-                'is_active' => $struktur_ksm->is_active,
                 'status_kepengurusan' => $struktur_ksm->status_kepengurusan,
                 'foto_profil' => $struktur_ksm->foto_profil,
                 'jabatan' => $struktur_ksm->jabatan ? [
@@ -266,7 +263,6 @@ class StrukturKsmController extends Controller
             'jabatan_id' => $struktur_ksm->jabatan_id,
             'divisi_kode' => $struktur_ksm->divisi_kode,
             'periode' => $struktur_ksm->periode,
-            'is_active' => $struktur_ksm->is_active,
             'status_kepengurusan' => $struktur_ksm->status_kepengurusan,
             'foto_profil' => $struktur_ksm->foto_profil,
             'created_at' => $struktur_ksm->created_at,
@@ -286,132 +282,175 @@ class StrukturKsmController extends Controller
     public function update(Request $request, Struktur_ksm $struktur_ksm)
     {
         try {
+            // ✅ SIMPLE: Validasi basic tanpa foto_profil
             $validator = Validator::make($request->all(), [
                 'nama' => 'required|string|max:255',
-                'jabatan_id' => 'required|exists:jabatans,id',
-                'divisi_kode' => 'nullable|exists:divisis,kode',
+                'jabatan_id' => 'required|integer|exists:jabatans,id',
+                'divisi_kode' => 'nullable|string|exists:divisis,kode',
                 'periode' => 'required|string|max:9',
-                'is_active' => 'boolean',
                 'status_kepengurusan' => 'required|in:aktif,non-aktif',
-                'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
             if ($validator->fails()) {
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Validasi gagal.',
-                        'errors' => $validator->errors(),
-                    ], 422);
-                }
-
-                return redirect()->back()
-                    ->withErrors($validator)
-                    ->withInput()
-                    ->with('error', 'Validasi gagal. Silakan periksa input Anda.');
-            }
-
-            $updateData = [
-                'nama' => $request->nama,
-                'jabatan_id' => $request->jabatan_id,
-                'divisi_kode' => $request->divisi_kode,
-                'periode' => $request->periode,
-                'is_active' => $request->boolean('is_active', true),
-                'status_kepengurusan' => $request->status_kepengurusan ?? 'aktif',
-            ];
-
-            // Handle foto profil upload
-            if ($request->hasFile('foto_profil')) {
-                // Delete old foto if exists
-                if ($struktur_ksm->foto_profil && Storage::disk('public')->exists($struktur_ksm->foto_profil)) {
-                    Storage::disk('public')->delete($struktur_ksm->foto_profil);
-                }
-
-                $foto = $request->file('foto_profil');
-                $filename = time() . '_' . Str::random(10) . '.' . $foto->getClientOriginalExtension();
-                $fotoPath = $foto->storeAs('struktur-ksm/foto-profil', $filename, 'public');
-                $updateData['foto_profil'] = $fotoPath;
-            }
-
-            $struktur_ksm->update($updateData);
-
-            // For AJAX requests (React component)
-            if ($request->expectsJson()) {
-                $struktur_ksm->load(['jabatan', 'divisi']);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Data struktur organisasi berhasil diperbarui.',
-                    'struktur' => [
-                        'id' => $struktur_ksm->id,
-                        'nama' => $struktur_ksm->nama,
-                        'jabatan_id' => $struktur_ksm->jabatan_id,
-                        'divisi_kode' => $struktur_ksm->divisi_kode,
-                        'periode' => $struktur_ksm->periode,
-                        'is_active' => $struktur_ksm->is_active,
-                        'status_kepengurusan' => $struktur_ksm->status_kepengurusan,
-                        'foto_profil' => $struktur_ksm->foto_profil,
-                        'jabatan' => $struktur_ksm->jabatan ? [
-                            'id' => $struktur_ksm->jabatan->id,
-                            'nama' => $struktur_ksm->jabatan->nama,
-                        ] : null,
-                        'divisi' => $struktur_ksm->divisi ? [
-                            'kode' => $struktur_ksm->divisi->kode,
-                            'nama' => $struktur_ksm->divisi->nama,
-                        ] : null,
-                        'created_at' => $struktur_ksm->created_at,
-                        'updated_at' => $struktur_ksm->updated_at,
-                    ],
-                ]);
-            }
-
-            return redirect()->route('admin.struktur-organisasi.index')
-                ->with('success', 'Data struktur organisasi berhasil diperbarui.');
-        } catch (\Exception $e) {
-            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal memperbarui data struktur organisasi: ' . $e->getMessage(),
-                ], 500);
+                    'message' => 'Validasi gagal.',
+                    'errors' => $validator->errors(),
+                ], 422);
             }
 
-            return redirect()->back()
-                ->with('error', 'Gagal memperbarui data struktur organisasi: ' . $e->getMessage())
-                ->withInput();
+            // ✅ SIMPLE: Semua data dari request
+            $updateData = [
+                'nama' => $request->input('nama'),
+                'jabatan_id' => (int) $request->input('jabatan_id'),
+                'divisi_kode' => $request->input('divisi_kode'),
+                'periode' => $request->input('periode'),
+                'status_kepengurusan' => $request->input('status_kepengurusan', 'aktif'),
+            ];
+
+            // ✅ SIMPLE: Handle file upload jika ada
+            if ($request->hasFile('foto_profil')) {
+                $file = $request->file('foto_profil');
+
+                // Simple file validation
+                if ($file->isValid() && in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])) {
+                    // Delete old file if exists
+                    if ($struktur_ksm->foto_profil && Storage::disk('public')->exists($struktur_ksm->foto_profil)) {
+                        Storage::disk('public')->delete($struktur_ksm->foto_profil);
+                    }
+
+                    // Upload new file
+                    $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('struktur-ksm/foto-profil', $filename, 'public');
+                    $updateData['foto_profil'] = $filePath;
+                }
+            }
+
+            // ✅ SIMPLE: Direct update
+            DB::table('struktur_ksms')
+                ->where('id', $request->id)
+                ->update(array_merge($updateData, ['updated_at' => now()]));
+
+            // ✅ SIMPLE: Get fresh data from database
+            $updatedStruktur = DB::table('struktur_ksms')
+                ->leftJoin('jabatans', 'struktur_ksms.jabatan_id', '=', 'jabatans.id')
+                ->leftJoin('divisis', 'struktur_ksms.divisi_kode', '=', 'divisis.kode')
+                ->where('struktur_ksms.id', $request->id)
+                ->select(
+                    'struktur_ksms.*',
+                    'jabatans.nama as jabatan_nama',
+                    'divisis.nama as divisi_nama'
+                )
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data struktur organisasi berhasil diperbarui.',
+                'struktur' => [
+                    'id' => $updatedStruktur->id,
+                    'nama' => $updatedStruktur->nama,
+                    'jabatan_id' => $updatedStruktur->jabatan_id,
+                    'divisi_kode' => $updatedStruktur->divisi_kode,
+                    'periode' => $updatedStruktur->periode,
+                    'status_kepengurusan' => $updatedStruktur->status_kepengurusan,
+                    'foto_profil' => $updatedStruktur->foto_profil,
+                    'jabatan' => $updatedStruktur->jabatan_nama ? [
+                        'id' => $updatedStruktur->jabatan_id,
+                        'nama' => $updatedStruktur->jabatan_nama,
+                    ] : null,
+                    'divisi' => $updatedStruktur->divisi_nama ? [
+                        'kode' => $updatedStruktur->divisi_kode,
+                        'nama' => $updatedStruktur->divisi_nama,
+                    ] : null,
+                    'created_at' => $updatedStruktur->created_at,
+                    'updated_at' => $updatedStruktur->updated_at,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui data: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Struktur_ksm $struktur_ksm)
+    public function destroy(Request $request, Struktur_ksm $struktur_ksm)
     {
         try {
-            // Delete foto profil if exists
-            if ($struktur_ksm->foto_profil && Storage::disk('public')->exists($struktur_ksm->foto_profil)) {
-                Storage::disk('public')->delete($struktur_ksm->foto_profil);
+
+            // Simpan ID untuk verifikasi
+            $strukturId = $request->id;
+            $strukturNama = $struktur_ksm->nama;
+            $fotoPath = $struktur_ksm->foto_profil;
+
+            // Cek apakah record benar-benar ada di database
+            $recordExists = DB::table('struktur_ksms')->where('id', $strukturId)->exists();
+
+            if (!$recordExists) {
+                throw new \Exception('Record tidak ditemukan di database.');
             }
 
-            $struktur_ksm->delete();
+            // Delete foto profil if exists
+            if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
+                $deleteResult = Storage::disk('public')->delete($fotoPath);
+            }
 
-            if (request()->expectsJson()) {
+            // Method 1: Menggunakan Model Delete
+            $deleteResult = $struktur_ksm->delete();
+
+            // Verifikasi apakah benar-benar terhapus
+            $stillExists = DB::table('struktur_ksms')->where('id', $strukturId)->exists();
+
+            // Jika model delete gagal, coba force delete
+            if ($stillExists) {
+
+                // Cek apakah menggunakan SoftDeletes
+                if (method_exists($struktur_ksm, 'forceDelete')) {
+                    $forceDeleteResult = $struktur_ksm->forceDelete();
+
+                    $stillExists = DB::table('struktur_ksms')->where('id', $strukturId)->exists();
+                }
+
+                // Jika masih gagal, gunakan raw query
+                if ($stillExists) {
+                    $affected = DB::table('struktur_ksms')->where('id', $strukturId)->delete();
+
+                    if ($affected === 0) {
+                        throw new \Exception('Tidak ada baris yang terhapus dari database.');
+                    }
+
+                    $finalCheck = DB::table('struktur_ksms')->where('id', $strukturId)->exists();
+
+                    if ($finalCheck) {
+                        throw new \Exception('Record masih ada di database setelah semua upaya penghapusan.');
+                    }
+                }
+            }
+
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Data struktur organisasi berhasil dihapus.',
+                    'deleted_id' => $strukturId
                 ]);
             }
 
             return redirect()->route('admin.struktur-organisasi.index')
                 ->with('success', 'Data struktur organisasi berhasil dihapus.');
         } catch (\Exception $e) {
-            if (request()->expectsJson()) {
+
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Gagal menghapus data struktur organisasi: ' . $e->getMessage(),
                 ], 500);
             }
 
-            return redirect()->back()->with('error', 'Gagal menghapus data struktur organisasi: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus data struktur organisasi: ' . $e->getMessage());
         }
     }
 
@@ -422,7 +461,6 @@ class StrukturKsmController extends Controller
     {
         try {
             $strukturList = Struktur_ksm::with(['jabatan', 'divisi'])
-                ->where('is_active', true)
                 ->orderBy('jabatan_id')
                 ->orderBy('nama')
                 ->get()
@@ -433,7 +471,6 @@ class StrukturKsmController extends Controller
                         'jabatan_id' => $struktur->jabatan_id,
                         'divisi_kode' => $struktur->divisi_kode,
                         'periode' => $struktur->periode,
-                        'is_active' => $struktur->is_active,
                         'status_kepengurusan' => $struktur->status_kepengurusan,
                         'foto_profil' => $struktur->foto_profil,
                         'jabatan' => $struktur->jabatan ? [
@@ -469,7 +506,6 @@ class StrukturKsmController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'status_kepengurusan' => 'required|in:aktif,non-aktif',
-                'is_active' => 'boolean',
             ]);
 
             if ($validator->fails()) {
@@ -481,8 +517,7 @@ class StrukturKsmController extends Controller
             }
 
             $struktur_ksm->update([
-                'status_kepengurusan' => $request->status_kepengurusan,
-                'is_active' => $request->boolean('is_active', $struktur_ksm->is_active),
+                'status_kepengurusan' => $request->status_kepengurusan
             ]);
 
             $struktur_ksm->load(['jabatan', 'divisi']);
@@ -496,7 +531,6 @@ class StrukturKsmController extends Controller
                     'jabatan_id' => $struktur_ksm->jabatan_id,
                     'divisi_kode' => $struktur_ksm->divisi_kode,
                     'periode' => $struktur_ksm->periode,
-                    'is_active' => $struktur_ksm->is_active,
                     'status_kepengurusan' => $struktur_ksm->status_kepengurusan,
                     'foto_profil' => $struktur_ksm->foto_profil,
                     'jabatan' => $struktur_ksm->jabatan ? [
@@ -526,7 +560,6 @@ class StrukturKsmController extends Controller
     {
         try {
             $query = Struktur_ksm::with(['jabatan', 'divisi'])
-                ->where('is_active', true)
                 ->where('status_kepengurusan', 'aktif');
 
             if ($divisi_kode && $divisi_kode !== 'all') {
@@ -547,7 +580,6 @@ class StrukturKsmController extends Controller
                         'jabatan_id' => $struktur->jabatan_id,
                         'divisi_kode' => $struktur->divisi_kode,
                         'periode' => $struktur->periode,
-                        'is_active' => $struktur->is_active,
                         'status_kepengurusan' => $struktur->status_kepengurusan,
                         'foto_profil' => $struktur->foto_profil,
                         'jabatan' => $struktur->jabatan ? [
