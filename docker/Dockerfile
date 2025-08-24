@@ -1,75 +1,70 @@
 #############################
-# Stage 1: Build Stage
+# A: Composer builder
 #############################
-FROM php:8.2-cli AS builder
+FROM php:8.2-cli AS composer-builder
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    libzip-dev zip unzip curl git libpq-dev \
+ && docker-php-ext-install pdo_mysql pdo_pgsql zip \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# 1) cache vendor tanpa scripts
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --no-dev --prefer-dist --no-ansi --no-progress --optimize-autoloader --no-scripts
+
+# 2) copy source lalu jalankan scripts
+COPY . .
+RUN composer install --no-interaction --no-dev --prefer-dist --no-ansi --no-progress --optimize-autoloader
+RUN php artisan key:generate
+
+#############################
+# B: Asset builder (Vite)
+#############################
+FROM node:20-alpine AS assets
 
 WORKDIR /app
 
-# Instal dependensi sistem dan ekstensi PHP yang diperlukan
-RUN apt-get update && apt-get install -y \
-    libzip-dev \
-    zip \
-    unzip \
-    curl \
-    git \
-    libpq-dev \
-    && docker-php-ext-install pdo_mysql pdo_pgsql zip
+COPY package.json package-lock.json ./
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN npm ci
+COPY vite.config.js ./
+COPY resources ./resources
 
-# Copy the rest of the application code
-COPY . .
-
-# Copy composer.json and composer.lock
-COPY composer.json composer.lock ./
-
-# Setup dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
-# RUN composer install
-
-RUN php artisan key:generate
-RUN php artisan storage:link --relative
-
+RUN npm run build
 
 #############################
-# Stage 2: PHP-FPM
+# C: PHP-FPM (runtime)
 #############################
 FROM php:8.2-fpm AS php-fpm
-
 WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y \
-    libzip-dev \
-    libpq-dev \
-    && docker-php-ext-install pdo_mysql pdo_pgsql zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    libzip-dev libpq-dev \
+ && docker-php-ext-install pdo_mysql pdo_pgsql zip opcache \
+ && rm -rf /var/lib/apt/lists/*
 
-# Salin hasil build dari stage sebelumnya
-COPY --from=builder /app /var/www/html
+COPY --from=composer-builder /app /var/www/html
+COPY --from=assets /app/public/build /var/www/html/public/build
 
-# Set permission
-RUN chmod +x docker/start.sh
-RUN chown -R www-data:www-data . && \
-    chmod -R 775 storage bootstrap/cache && \
-    chmod -R 755 public && \
-    find config vendor -type f -exec chmod 644 {} \; && \
-    chmod 644 artisan
+RUN php artisan storage:link
 
-# CMD ["php", "artisan", "serve", "--host", "0.0.0.0", "--port", "8000"]
-# CMD ["php-fpm"]
+RUN chmod +x docker/start.sh \
+ && chown -R www-data:www-data . \
+ && chmod -R 775 storage bootstrap/cache \
+ && chmod -R 755 public \
+ && find config vendor -type f -exec chmod 644 {} \; \
+ && chmod 644 artisan
 
 CMD ["docker/start.sh"]
 
-
-
 #############################
-# Stage 3: Nginx
+# D: Nginx
 #############################
 FROM nginx:1.25-alpine AS nginx
+COPY --from=composer-builder /app/public /var/www/html/public
+COPY --from=assets /app/public/build /var/www/html/public/build
 
-# Salin folder public dari hasil build
-COPY --from=builder /app/public /var/www/html/public
-
-# Expose port 80
 EXPOSE 80

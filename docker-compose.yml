@@ -1,17 +1,17 @@
 services:
-  ksmif-php:
+  ksmif-web-php:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
       target: php-fpm
-    container_name: ksmif-php
+    container_name: ksmif-web-php
     networks:
-      - ksmif-net
-      - mariadb-net
+      - ksmif-web-net
+      # - ksmif-mariadb-net
     volumes:
-      - ksmif-data:/var/www/html
-    env_file:
-      - .env
+      - ksmif-web-data:/var/www/html
+      - ./public/images:/var/www/html/public/images
+      - ./storage/app/public:/var/www/html/storage/app/public
     healthcheck:
       test: ["CMD", "php-fpm", "-t"]
       interval: 10s
@@ -20,30 +20,36 @@ services:
       start_period: 5s
     restart: always
 
-  ksmif-nginx:
+  ksmif-web-nginx:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
       target: nginx
-    container_name: ksmif-nginx
-    ports:
-      - "127.0.0.1:8080:80"
+    container_name: ksmif-web-nginx
+#    ports:
+#      - "127.0.0.1:8080:80"
     networks:
-      - ksmif-net
+      - ksmif-web-net
+      # - rp-net
     volumes:
-      - ksmif-data:/var/www/html
+      - ksmif-web-data:/var/www/html:ro
+      - ./public/images:/var/www/html/public/images:ro
+      - ./storage/app/public:/var/www/html/storage/app/public:ro
       - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - ksmif-php
+      - ksmif-web-php
 
 volumes:
-  ksmif-data:
-    name: ksmif-data
+  ksmif-web-data:
+    name: ksmif-web-data
 
 networks:
-  ksmif-net:
-    name: ksmif-net
+  ksmif-web-net:
+    name: ksmif-web-net
     driver: bridge
-  mariadb-net:
-    name: mariadb-net
-    external: true
+  # ksmif-mariadb-net:
+  #   name: ksmif-mariadb-net
+  #   external: true
+  # rp-net:
+  #   name: rp-net
+  #   external: true
