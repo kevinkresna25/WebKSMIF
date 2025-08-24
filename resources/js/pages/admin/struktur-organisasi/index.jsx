@@ -44,7 +44,7 @@ const StrukturOrganisasiPage = ({
     jabatan_id: '',
     divisi_kode: '',
     periode: '',
-    status_kepengurusan: 'aktif',
+    status_kepengurusan: '',
     foto_profil: null
   });
 
@@ -69,9 +69,10 @@ const StrukturOrganisasiPage = ({
   };
 
   const getStatusText = (struktur) => {
-    if (struktur.status_kepengurusan === 'aktif') {
+    console.log('Struktur status_kepengurusan:', struktur);
+    if (struktur.status_kepengurusan == 'aktif') {
       return 'Aktif';
-    } else if (struktur.status_kepengurusan === 'non-aktif') {
+    } else if (struktur.status_kepengurusan == 'non-aktif') {
       return 'Non-Aktif';
     } else {
       return struktur.status_kepengurusan || 'Tidak Diketahui';
