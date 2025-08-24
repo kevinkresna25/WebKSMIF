@@ -29,21 +29,14 @@ vendor
 /public/storage
 /public/build
 
-# Simpan storage serapi mungkin: exclude semuanya, kecuali asset publik
-/storage/*
-!/storage/app/public
-!/storage/app/public/**
-
-# --- Env & local configs (jangan ikut image) ---
+# --- Env & local configs ---
 .env.*
 !.env.example
 Homestead.json
 Homestead.yaml
 
-# --- Docker compose files (tak perlu untuk image) ---
+# --- Docker compose files ---
 docker-compose*.yml
 docker-compose*.yaml
-
-# --- Opsional: kalau tidak dibutuhkan di image produksi ---
 tests
 docs
