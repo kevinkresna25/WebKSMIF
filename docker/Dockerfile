@@ -24,13 +24,15 @@ RUN php artisan key:generate
 # B: Asset builder (Vite)
 #############################
 FROM node:20-alpine AS assets
+
 WORKDIR /app
+
 COPY package.json package-lock.json ./
+
 RUN npm ci
 COPY vite.config.js ./
-# copy config tambahan jika ada
-# COPY tailwind.config.* postcss.config.* tsconfig.* ./
 COPY resources ./resources
+
 RUN npm run build
 
 #############################
