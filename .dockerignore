@@ -1,14 +1,49 @@
-**/.devcontainer
-**/.git
-**/.vscode
-/node_modules
-/vendor
-.phpunit.result.cache
-.editorconfig
-.gitattributes
+# --- VCS & IDE junk ---
+.git
 .gitignore
-docker-compose.yml
+.gitattributes
+.devcontainer
+.vscode
+.idea
+.fleet
+.nova
+.zed
+.DS_Store
+Thumbs.db
+
+# --- Node ---
+node_modules
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.turbo
+.npm
+.eslintcache
+
+# --- PHP / Composer ---
+vendor
+.phpunit.result.cache
+
+# --- Laravel runtime artifacts ---
+/public/hot
+/public/storage
+/public/build
+
+# Simpan storage serapi mungkin: exclude semuanya, kecuali asset publik
+/storage/*
+!/storage/app/public
+!/storage/app/public/**
+
+# --- Env & local configs (jangan ikut image) ---
+.env.*
+!.env.example
 Homestead.json
 Homestead.yaml
-npm-debug.log
-yarn-error.log
+
+# --- Docker compose files (tak perlu untuk image) ---
+docker-compose*.yml
+docker-compose*.yaml
+
+# --- Opsional: kalau tidak dibutuhkan di image produksi ---
+tests
+docs
