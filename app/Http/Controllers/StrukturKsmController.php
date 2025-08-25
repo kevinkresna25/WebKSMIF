@@ -312,8 +312,6 @@ class StrukturKsmController extends Controller
             if ($request->hasFile('foto_profil')) {
                 $file = $request->file('foto_profil');
 
-                dd($file);
-
                 // Simple file validation
                 if ($file->isValid() && in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])) {
                     // Delete old file if exists
@@ -323,6 +321,7 @@ class StrukturKsmController extends Controller
 
                     // Upload new file
                     $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    dd($filename);
                     $filePath = $file->storeAs('struktur-ksm/foto-profil', $filename, 'public');
                     $updateData['foto_profil'] = $filePath;
                 }
