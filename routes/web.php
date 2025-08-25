@@ -16,6 +16,7 @@ Route::controller(ClientController::class)->group(function () {
     Route::get('/team', 'team')->name('client.team');
     Route::get('/gallery', 'gallery')->name('client.gallery');
     Route::get('/list', 'list')->name('client.list');
+    Route::get('/lsta', 'lsta')->name('client.lsta');
     Route::get('/gallery-detail/{programId}', 'galleryDetail');
 
     // API endpoints for AJAX requests

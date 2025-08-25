@@ -296,6 +296,12 @@ class ClientController extends Controller
         }
     }
 
+    public function lsta()
+    {
+        return inertia('client/lsta');
+    }
+
+
     public function galleryDetail($program_kerja_id)
     {
         $program = Program_kerja::with('galeris')->findOrFail($program_kerja_id);

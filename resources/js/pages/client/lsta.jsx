@@ -357,15 +357,19 @@ const Lsta = () => {
     return(
         <Layout>
             {/* Hero Section */}
-            <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
+
+            {/* <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
                 <MainLogo />
                 <TitleSection />
                 <CTAButtons />
             </main>
 
             <ScrollIndicator />
-            <SectionDivider />
-            <AboutLSTASection />
+            <SectionDivider /> */}
+
+            <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28">
+                <AboutLSTASection />
+            </main>
         </Layout>
     );
 };

@@ -374,9 +374,10 @@ const SectionDivider = () => {
 
 const TeamMember = ({ name, position, image, index, isVisible }) => (
   <motion.div
-    initial={animations.fade.fadeInUp}
-    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-    transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 * index }}
+    variants={animations.fade.fadeInUp}
+    initial="initial"
+    animate={isVisible ? "animate" : "initial"}
+    custom={index}
     className="text-center"
   >
     {/* Photo with gradient background */}
@@ -411,15 +412,16 @@ const TeamMember = ({ name, position, image, index, isVisible }) => (
 );
 
 const OurTeamSectionWithData = ({ teamHighlight, currentPeriode }) => {
-    const [teamRef, isVisible] = useInView();
+    const [teamRef, isVisible] = useInView({ triggerOnce: true, threshold: 0.3 });
 
     return (
         <section ref={teamRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
             <div className="max-w-4xl mx-auto text-center">
                 <motion.div
-                    initial={animations.fade.fadeInUp}
-                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    variants={animations.fade.fadeInUp}
+                    initial="initial"
+                    animate={isVisible ? "animate" : "initial"}
+                    custom={0}
                 >
                     <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 lg:mb-12">
                         Our Team
@@ -427,9 +429,10 @@ const OurTeamSectionWithData = ({ teamHighlight, currentPeriode }) => {
                 </motion.div>
 
                 <motion.div
-                    initial={animations.fade.fadeInUp}
-                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                    variants={animations.fade.fadeInUp}
+                    initial="initial"
+                    animate={isVisible ? "animate" : "initial"}
+                    custom={1}
                 >
                     <p className="text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed mb-12 lg:mb-16">
                         Periode {currentPeriode} - We are comprised of four departments, internal relation, public relation, human resource development, and creative design department.
@@ -437,9 +440,10 @@ const OurTeamSectionWithData = ({ teamHighlight, currentPeriode }) => {
                 </motion.div>
 
                 <motion.div
-                    initial={animations.fade.fadeInUp}
-                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                    variants={animations.fade.fadeInUp}
+                    initial="initial"
+                    animate={isVisible ? "animate" : "initial"}
+                    custom={2}
                     className="flex justify-center mb-16"
                 >
                     <button className="bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 px-8 py-4 text-white font-medium rounded-full backdrop-blur-sm transition-all duration-300 transform hover:scale-105 text-lg">
@@ -456,33 +460,36 @@ const OurTeamSectionWithData = ({ teamHighlight, currentPeriode }) => {
                                 name={member.name}
                                 position={member.position}
                                 image={member.image}
-                                index={index}
+                                index={index + 3} // Start from index 3 to continue animation sequence
                                 isVisible={isVisible}
                             />
                         ))
                     ) : (
                         <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center"
+                            variants={animations.fade.fadeInUp}
+                            initial="initial"
+                            animate={isVisible ? "animate" : "initial"}
+                            custom={3}
+                            className="text-center col-span-full"
                         >
-                        <div className="text-white/30 text-8xl mb-6">🥷</div>
-                        <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4">
-                            Tidak Ada Team
-                        </h3>
-                        <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
-                            Saat ini tidak ada team.
-                            Pantau terus media sosial kami untuk informasi event terbaru!
-                        </p>
+                            <div className="text-white/30 text-8xl mb-6">🥷</div>
+                            <h3 className="text-2xl sm:text-3xl font-semibold text-white mb-4">
+                                Tidak Ada Team
+                            </h3>
+                            <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+                                Saat ini tidak ada team.
+                                Pantau terus media sosial kami untuk informasi event terbaru!
+                            </p>
                         </motion.div>
                     )}
                 </div>
 
                 {/* See full team button */}
                 <motion.div
-                    initial={animations.fade.fadeInUp}
-                    animate={isVisible ? animations.fade.fadeInUp.animate : animations.fade.fadeInUp}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
+                    variants={animations.fade.fadeInUp}
+                    initial="initial"
+                    animate={isVisible ? "animate" : "initial"}
+                    custom={teamHighlight?.length ? teamHighlight.length + 3 : 4} // Dynamic custom value based on team members
                     className="flex justify-center"
                 >
                     <a href="/team">
@@ -499,12 +506,13 @@ const OurTeamSectionWithData = ({ teamHighlight, currentPeriode }) => {
 // ============ ONGOING EVENT SECTION ============
 
 // EventCard Component
-const EventCard = ({ event, index, onRegister }) => {
+const EventCard = ({ event, index, onRegister, isVisible }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
+      variants={animations.fade.fadeInUp}
+      initial="initial"
+      animate={isVisible ? "animate" : "initial"}
+      custom={index + 1} // Start from 1 to account for title animation
       className="bg-white/5 backdrop-blur-sm border border-white/20 rounded-2xl p-6 sm:p-8 hover:bg-white/10 transition-all duration-300 transform hover:scale-105"
     >
       {/* Event Image */}
@@ -622,8 +630,8 @@ const EventCard = ({ event, index, onRegister }) => {
         {event.registrationDeadline && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
             className="mt-6 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg"
           >
             <div className="text-orange-400 text-sm font-medium mb-1">⚠️ Deadline Pendaftaran</div>
@@ -648,6 +656,7 @@ const EventCard = ({ event, index, onRegister }) => {
 const OngoingEventSection = ({ featuredPrograms, onRegister }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventsRef, isEventsVisible] = useInView({ triggerOnce: true, threshold: 0.3 });
 
   // Mock data
   const ongoingEvents = featuredPrograms.map(program => ({
@@ -685,13 +694,15 @@ const OngoingEventSection = ({ featuredPrograms, onRegister }) => {
   const hasOngoingEvents = ongoingEvents && ongoingEvents.length > 0;
 
   return (
-    <div className="min-h-fit ">
-      <section className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
+    <div className="min-h-fit">
+      <section ref={eventsRef} className="relative z-10 px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
         <div className="max-w-6xl mx-auto">
           {/* Section Title */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={animations.fade.fadeInUp}
+            initial="initial"
+            animate={isEventsVisible ? "animate" : "initial"}
+            custom={0}
             className="text-center mb-16"
           >
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 lg:mb-12">
@@ -708,13 +719,16 @@ const OngoingEventSection = ({ featuredPrograms, onRegister }) => {
                   event={event}
                   index={index}
                   onRegister={handleRegistration}
+                  isVisible={isEventsVisible}
                 />
               ))}
             </div>
           ) : (
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
+              variants={animations.fade.fadeInUp}
+              initial="initial"
+              animate={isEventsVisible ? "animate" : "initial"}
+              custom={1}
               className="text-center"
             >
               <div className="text-white/30 text-8xl mb-6">📅</div>

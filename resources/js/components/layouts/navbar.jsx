@@ -156,7 +156,7 @@ const Navbar = () => {
                 active={currentPage === 'lsta'}
                 onClick={() => handleNavigation('lsta')}
               >
-                LSTA & Bursa
+                LSTA
               </NavButton>
             </div>
 
