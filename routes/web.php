@@ -32,6 +32,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 });
 
+Route::get('/login', fn() => redirect()->route('admin.login'))->name('login');
+
 /*
 |--------------------------------------------------------------------------
 | Protected Admin Routes
