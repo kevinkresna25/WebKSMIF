@@ -322,6 +322,7 @@ class StrukturKsmController extends Controller
                     // Upload new file
                     $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                     $filePath = $file->storeAs('struktur-ksm/foto-profil', $filename, 'public');
+                    dd($filePath);
                     $updateData['foto_profil'] = $filePath;
                 }
             }
