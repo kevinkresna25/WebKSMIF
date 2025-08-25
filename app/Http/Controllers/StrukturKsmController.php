@@ -314,15 +314,20 @@ class StrukturKsmController extends Controller
 
                 // Simple file validation
                 if ($file->isValid() && in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])) {
-                    // Delete old file if exists
-                    if ($struktur_ksm->foto_profil && Storage::disk('public')->exists($struktur_ksm->foto_profil)) {
-                        Storage::disk('public')->delete($struktur_ksm->foto_profil);
+                    // Hapus file lama kalau ada
+                    if ($struktur_ksm->foto_profil && file_exists(public_path($struktur_ksm->foto_profil))) {
+                        unlink(public_path($struktur_ksm->foto_profil));
                     }
 
-                    // Upload new file
+                    // Upload file baru
                     $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->move(public_path('uploads/struktur-ksm/foto-profil'), $filename);
-                    $updateData['foto_profil'] = $filePath;
+                    $relativePath = 'uploads/struktur-ksm/foto-profil/' . $filename;
+
+                    // Pindahkan file ke public/uploads
+                    $file->move(public_path('uploads/struktur-ksm/foto-profil'), $filename);
+
+                    // Simpan path relatif ke DB
+                    $updateData['foto_profil'] = $relativePath;
                 }
             }
 
