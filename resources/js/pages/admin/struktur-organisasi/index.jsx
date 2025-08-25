@@ -803,7 +803,7 @@ const StrukturTableRow = ({
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
           {struktur.foto_profil ? (
             <img
-              src={`/storage/${struktur.foto_profil}`}
+              src={`/${struktur.foto_profil}`}
               alt={struktur.nama}
               className="w-full h-full object-cover rounded-full"
               onError={(e) => {
