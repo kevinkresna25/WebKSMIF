@@ -4,6 +4,9 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile
       target: php-fpm
+      args:
+        PUID: 1000
+        PGID: 1000
     container_name: ksmif-web-php
     networks:
       - ksmif-web-net

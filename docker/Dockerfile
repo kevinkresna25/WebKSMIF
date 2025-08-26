@@ -2,6 +2,7 @@
 # A: Composer builder
 #############################
 FROM php:8.2-cli AS composer-builder
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
@@ -39,23 +40,27 @@ RUN npm run build
 # C: PHP-FPM (runtime)
 #############################
 FROM php:8.2-fpm AS php-fpm
+
 WORKDIR /var/www/html
+
+ARG PUID
+ARG PGID
+RUN groupmod -o -g ${PGID} www-data
+RUN usermod  -o -u ${PUID} www-data
 
 RUN apt-get update && apt-get install -y \
     libzip-dev libpq-dev \
  && docker-php-ext-install pdo_mysql pdo_pgsql zip opcache \
  && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer-builder /app /var/www/html
-COPY --from=assets /app/public/build /var/www/html/public/build
+COPY --from=composer-builder --chown=${PUID}:${PGID} /app /var/www/html
+COPY --from=assets --chown=${PUID}:${PGID} /app/public/build /var/www/html/public/build
 
 RUN php artisan storage:link
 
 RUN chmod +x docker/start.sh \
- && chown -R www-data:www-data . \
- && chmod -R 775 storage bootstrap/cache \
- && chmod -R 755 public \
- && find config vendor -type f -exec chmod 644 {} \; \
+ && [ -d bootstrap/cache ] && find bootstrap/cache -type d -exec chmod 775 {} \; || true \
+ && [ -d bootstrap/cache ] && find bootstrap/cache -type f -exec chmod 664 {} \; || true \
  && chmod 644 artisan
 
 CMD ["docker/start.sh"]
@@ -64,6 +69,7 @@ CMD ["docker/start.sh"]
 # D: Nginx
 #############################
 FROM nginx:1.25-alpine AS nginx
+
 COPY --from=composer-builder /app/public /var/www/html/public
 COPY --from=assets /app/public/build /var/www/html/public/build
 
