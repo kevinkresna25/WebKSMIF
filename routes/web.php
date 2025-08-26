@@ -39,6 +39,7 @@ Route::get('/login', fn() => redirect()->route('admin.login'))->name('login');
 | Protected Admin Routes
 |--------------------------------------------------------------------------
 */
+
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
 
     // Dashboard

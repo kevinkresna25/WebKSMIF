@@ -57,7 +57,7 @@ class ClientController extends Controller
                     return [
                         'name' => $member->nama,
                         'position' => $member->jabatan->nama ?? 'Unknown',
-                        'image' => $member->foto_profil ? asset($member->foto_profil) : '/images/default-avatar.png',
+                        'image' => $member->foto_profil ? asset('storage/' . $member->foto_profil) : '/images/default-avatar.png',
                         'divisi' => $member->divisi_kode ? $member->divisi->nama : 'Badan Pengurus Harian',
                         'divisi_kode' => $member->divisi_kode ?? 'BPH',
                     ];

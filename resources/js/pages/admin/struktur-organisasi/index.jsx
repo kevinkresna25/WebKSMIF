@@ -709,7 +709,7 @@ const StrukturCard = ({
     <div className="h-40 bg-gradient-to-br from-blue-500 to-purple-600 relative overflow-hidden">
       {struktur.foto_profil ? (
         <img
-          src={`/${struktur.foto_profil}`}
+          src={`/storage/${struktur.foto_profil}`}
           alt={struktur.nama}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
@@ -803,7 +803,7 @@ const StrukturTableRow = ({
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
           {struktur.foto_profil ? (
             <img
-              src={`/${struktur.foto_profil}`}
+              src={`/storage/${struktur.foto_profil}`}
               alt={struktur.nama}
               className="w-full h-full object-cover rounded-full"
               onError={(e) => {
@@ -1139,7 +1139,7 @@ const DetailModal = ({
         <div className="text-center">
           {struktur.foto_profil ? (
             <img
-              src={`/${struktur.foto_profil}`}
+              src={`/storage/${struktur.foto_profil}`}
               alt={struktur.nama}
               className="w-32 h-32 object-cover rounded-full mx-auto border-4 border-gray-200"
             />
